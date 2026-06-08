@@ -111,6 +111,8 @@ export interface Wave {
   in: string[];
   /** Player ids leaving the field. */
   out: string[];
+  /** One-sentence explanation of why this Wave was generated. */
+  reason: string;
 }
 
 /** A fixed slice of game clock shared by the whole field — a grid column. */
