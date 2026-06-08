@@ -22,9 +22,11 @@ await run({
   promptFile: "./.sandcastle/prompt.md",
 
   // Maximum number of iterations (agent invocations) to run in a session.
-  // Each iteration works on a single issue. Start at 1 for the supervised dry
-  // run; raise to 5–10 once one issue is proven end-to-end (Phase E / AFK run).
-  maxIterations: 1,
+  // Each iteration is a fresh agent session that re-reads the open-issue list,
+  // so multiple iterations add resilience: if one session ends or dies, the next
+  // picks up the remaining unblocked issues. 4 covers the remaining engine work
+  // (#7, #8) with margin before it hits the Firebase-dependent UI slices.
+  maxIterations: 4,
 
   // Branch strategy — merge-to-head creates a temporary branch for the agent
   // to work on, then merges the result back to HEAD when the run completes.
