@@ -10,3 +10,4 @@ export * from "./collapsePolicy";
 export * from "./strategy";
 export * from "./fairness";
 export * from "./generatePlan";
+export * from "./resolveFrom";
