@@ -8,3 +8,4 @@ export * from "./types";
 export * from "./formation";
 export * from "./collapsePolicy";
 export * from "./strategy";
+export * from "./fairness";
