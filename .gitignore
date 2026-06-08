@@ -32,3 +32,6 @@ coverage/
 # Misc
 *.tsbuildinfo
 .vercel
+
+# Local Netlify folder
+.netlify
