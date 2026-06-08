@@ -17,11 +17,12 @@ export type Role = "Forward" | "Mid" | "Defender" | "Keeper";
 export type Strategy = "equal-time" | "competitive" | "development" | "blend";
 
 /**
- * How the field rotates when the Subs pool is too small for full Waves.
- * `wave` = normal substitution events; `breather` = rotate Players through a
- * rest Position so short-rostered kids are not stuck on flat-out.
+ * How the field rotates based on Subs available (Squad size − side size).
+ * `wave` = full Waves as designed (3+ Subs); `breather` = rotate Players
+ * through a rest Position (1–2 Subs); `none` = no subs, everyone plays the
+ * whole game (0 Subs); `short-handed` = Squad is below on-field side size.
  */
-export type CollapseMode = "wave" | "breather";
+export type CollapseMode = "wave" | "breather" | "none" | "short-handed";
 
 /**
  * A single named spot in a Formation (one row of the planning grid). The
@@ -91,6 +92,12 @@ export interface Preferences {
   halfMinutes: number;
   /** Per-Role minimum shift length before the engine will rotate a Player. */
   cadenceByRole: Record<Role, number>;
+  /**
+   * Minimum Subs required to run full Waves. Defaults to 3 when absent.
+   * At or above this threshold the engine uses "wave" mode; below it uses
+   * "breather" (1–2 Subs) or "none" (0 Subs).
+   */
+  fullWavesThreshold?: number;
 }
 
 /**
