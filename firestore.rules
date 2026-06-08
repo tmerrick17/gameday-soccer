@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// GameDay Soccer — baseline security rules.
+// Invite-only app (see CONTEXT.md): every request must be authenticated.
+// Slice #6 refines these into per-collection ownership / invite checks.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Deny everything by default; require an authenticated user for any access.
+    // Tighten per-collection (team membership, invite tokens) in #6.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
