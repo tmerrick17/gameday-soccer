@@ -9,3 +9,5 @@ export { getFirebase } from "./config";
 export type { KeeperAssignment } from "../engine/generatePlan";
 export type { Override, LiveState } from "../engine/resolveFrom";
 export { currentSegmentIndex, nextWave, computeMinutesPlayed } from "../engine/live";
+export { computeSeasonTotals, suggestNextKeepers } from "../engine/season";
+export type { SeasonTotals } from "../engine/season";

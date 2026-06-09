@@ -9,11 +9,13 @@ import {
   getRoster,
   getFormations,
   getPreferences,
+  listGames,
   saveGame,
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
 import { resolve } from "../../../../../lib/engine/collapsePolicy";
+import { suggestNextKeepers } from "../../../../../lib/engine/season";
 import type { Player, Formation, Preferences, Half } from "../../../../../lib/engine/types";
 import type { KeeperAssignment } from "../../../../../lib/engine/generatePlan";
 
@@ -37,6 +39,7 @@ export default function NewGamePage({ params }: PageProps) {
   const [keeper2Id, setKeeper2Id] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestedKeepers, setSuggestedKeepers] = useState<KeeperAssignment[]>([]);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -49,14 +52,22 @@ export default function NewGamePage({ params }: PageProps) {
       getRoster(db, teamId),
       getFormations(db, teamId),
       getPreferences(db, teamId),
+      listGames(db, teamId),
     ])
-      .then(([r, f, p]) => {
+      .then(([r, f, p, g]) => {
         setRoster(r);
         setFormations(f);
         setPrefs(p);
         if (f.length === 1) setSelectedFormationId(f[0].id);
-        // Default all players to attending
-        setSquadIds(new Set(r.map((p) => p.id)));
+        setSquadIds(new Set(r.map((pl) => pl.id)));
+        // Pre-suggest keepers from last game (swap halves for fairness)
+        const lastGame = [...g].reverse().find((game) => game.keeperAssignments?.length === 2);
+        if (lastGame) {
+          const suggested = suggestNextKeepers(lastGame.keeperAssignments);
+          setSuggestedKeepers(suggested);
+          setKeeper1Id(suggested.find((ka) => ka.halfIndex === 0)?.keeperId ?? null);
+          setKeeper2Id(suggested.find((ka) => ka.halfIndex === 1)?.keeperId ?? null);
+        }
       })
       .finally(() => setFetching(false));
   }, [user, teamId]);
@@ -304,6 +315,7 @@ export default function NewGamePage({ params }: PageProps) {
             label="Half 1 keeper"
             pool={keeperPool}
             value={keeper1Id}
+            suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
             onChange={(id) => {
               setKeeper1Id(id);
               if ((prefs.keeperMode ?? "half-swap") === "fixed") setKeeper2Id(id);
@@ -315,6 +327,7 @@ export default function NewGamePage({ params }: PageProps) {
               label="Half 2 keeper"
               pool={keeperPool}
               value={keeper2Id}
+              suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
               onChange={setKeeper2Id}
             />
           )}
@@ -347,11 +360,13 @@ function KeeperPicker({
   label,
   pool,
   value,
+  suggestedId,
   onChange,
 }: {
   label: string;
   pool: Player[];
   value: string | null;
+  suggestedId?: string | null;
   onChange: (id: string) => void;
 }) {
   return (
@@ -363,13 +378,18 @@ function KeeperPicker({
             key={p.id}
             type="button"
             onClick={() => onChange(p.id)}
-            className={`rounded-xl border px-3 py-2 text-sm font-medium ${
+            className={`relative rounded-xl border px-3 py-2 text-sm font-medium ${
               value === p.id
                 ? "border-green-500 bg-green-50 text-green-700"
                 : "border-gray-200 text-gray-700 hover:bg-gray-50"
             }`}
           >
             {p.name}
+            {suggestedId === p.id && value !== p.id && (
+              <span className="ml-1.5 rounded-full bg-blue-100 px-1 py-0.5 text-xs font-normal text-blue-600">
+                suggested
+              </span>
+            )}
           </button>
         ))}
       </div>
