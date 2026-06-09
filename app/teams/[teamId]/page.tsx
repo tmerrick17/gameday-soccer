@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../../providers";
 import { getFirebase } from "../../../lib/firebase/config";
 import {
@@ -137,6 +138,29 @@ export default function TeamDetailPage({ params }: PageProps) {
         <p className="mt-2 text-xs text-gray-400">
           Share this code (or link) with co-coaches: {inviteUrl}
         </p>
+      </section>
+
+      {/* Team management links */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+          Manage
+        </h2>
+        <div className="flex flex-col gap-2">
+          <Link
+            href={`/teams/${teamId}/roster`}
+            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+          >
+            <span className="font-medium">Roster</span>
+            <span className="text-gray-400">→</span>
+          </Link>
+          <Link
+            href={`/teams/${teamId}/formations`}
+            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+          >
+            <span className="font-medium">Formations</span>
+            <span className="text-gray-400">→</span>
+          </Link>
+        </div>
       </section>
 
       {/* Members section */}
