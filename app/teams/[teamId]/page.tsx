@@ -147,6 +147,13 @@ export default function TeamDetailPage({ params }: PageProps) {
         </h2>
         <div className="flex flex-col gap-2">
           <Link
+            href={`/teams/${teamId}/games/new`}
+            className="flex items-center justify-between rounded-xl bg-green-600 px-4 py-3 text-white hover:bg-green-700"
+          >
+            <span className="font-semibold">New game</span>
+            <span>→</span>
+          </Link>
+          <Link
             href={`/teams/${teamId}/roster`}
             className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
           >
