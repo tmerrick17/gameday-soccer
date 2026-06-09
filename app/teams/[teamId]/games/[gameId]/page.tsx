@@ -80,6 +80,16 @@ export default function GamePage({ params }: PageProps) {
         </span>
       </div>
 
+      {/* Live game entry point */}
+      {gameDoc.status !== "completed" && (
+        <Link
+          href={`/teams/${teamId}/games/${gameId}/live`}
+          className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500"
+        >
+          {gameDoc.status === "live" ? "▶ Resume live game" : "▶ Start live game"}
+        </Link>
+      )}
+
       {/* Half tabs */}
       <div className="flex gap-2">
         {(["Half 1", "Half 2"] as const).map((label, i) => (

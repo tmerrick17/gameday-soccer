@@ -5,6 +5,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import type { RotationPlan } from "../engine/types";
@@ -17,7 +18,20 @@ export interface GameSessionDoc {
   squadIds: string[];
   keeperAssignments: KeeperAssignment[];
   plan: RotationPlan;
+  // Live game state (mutable)
+  status?: "draft" | "live" | "completed";
+  controllerDeviceId?: string | null;
+  clockOffsetSeconds?: number;
+  clockStartedAt?: number | null;
+  isClockRunning?: boolean;
+  livePlan?: RotationPlan | null;
+  minutesPlayed?: Record<string, number>;
+  removedPlayerIds?: string[];
 }
+
+type LiveStateUpdates = Partial<
+  Omit<GameSessionDoc, "id" | "createdAt" | "formationId" | "squadIds" | "keeperAssignments" | "plan">
+>;
 
 export async function saveGame(
   db: Firestore,
@@ -27,8 +41,8 @@ export async function saveGame(
   const ref = doc(collection(db, "teams", teamId, "games"));
   const id = ref.id;
   const createdAt = serverTimestamp();
-  await setDoc(ref, { ...input, id, createdAt });
-  return { ...input, id, createdAt: new Date() };
+  await setDoc(ref, { ...input, id, createdAt, status: "draft" });
+  return { ...input, id, createdAt: new Date(), status: "draft" };
 }
 
 export async function getGame(
@@ -51,4 +65,23 @@ export async function listGames(
     const data = d.data() as GameSessionDoc;
     return { ...data, id: d.id };
   });
+}
+
+export async function updateGameLiveState(
+  db: Firestore,
+  teamId: string,
+  gameId: string,
+  updates: LiveStateUpdates
+): Promise<void> {
+  await updateDoc(doc(db, "teams", teamId, "games", gameId), updates);
+}
+
+export function getDeviceId(): string {
+  if (typeof window === "undefined") return "ssr";
+  let id = localStorage.getItem("gameday_device_id");
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("gameday_device_id", id);
+  }
+  return id;
 }

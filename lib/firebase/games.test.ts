@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { saveGame, getGame, listGames, type GameSessionDoc } from "./games";
+import { saveGame, getGame, listGames, updateGameLiveState, type GameSessionDoc } from "./games";
 import type { RotationPlan } from "../engine/types";
 
 // ── Minimal fixtures ──────────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ vi.mock("firebase/firestore", () => {
       }
       return makeFakeRef(segments.join("/"));
     }),
+    updateDoc: vi.fn(async () => undefined),
     collection: vi.fn((_db: unknown, ...segments: string[]) => ({
       _isCollection: true as const,
       path: segments.join("/"),
@@ -137,5 +138,25 @@ describe("listGames", () => {
     const result = await listGames(fakeDb, "team-1");
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("g1");
+  });
+});
+
+// ── updateGameLiveState ───────────────────────────────────────────────────────
+
+describe("updateGameLiveState", () => {
+  it("calls updateDoc with the correct game path", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    await updateGameLiveState(fakeDb, "team-1", "game-42", { status: "live" });
+    expect(vi.mocked(updateDoc)).toHaveBeenCalledOnce();
+    const [ref] = vi.mocked(updateDoc).mock.calls[0];
+    expect((ref as DocRef).path).toBe("teams/team-1/games/game-42");
+  });
+
+  it("passes the updates verbatim to updateDoc", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    const updates = { status: "live" as const, clockOffsetSeconds: 120 };
+    await updateGameLiveState(fakeDb, "team-1", "game-42", updates);
+    const [, written] = vi.mocked(updateDoc).mock.calls[0];
+    expect(written).toMatchObject(updates);
   });
 });

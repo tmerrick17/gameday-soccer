@@ -7,3 +7,5 @@ export * from "./games";
 export * from "./auth";
 export { getFirebase } from "./config";
 export type { KeeperAssignment } from "../engine/generatePlan";
+export type { Override, LiveState } from "../engine/resolveFrom";
+export { currentSegmentIndex, nextWave, computeMinutesPlayed } from "../engine/live";
