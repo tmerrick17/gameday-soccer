@@ -265,7 +265,7 @@ export default function LiveGamePage({ params }: PageProps) {
   if (error || !gameDoc) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-red-600">{error ?? "Game not found."}</p>
+        <p className="text-red-400">{error ?? "Game not found."}</p>
       </main>
     );
   }

@@ -63,7 +63,7 @@ export default function AuthPage() {
   if (loading || completing) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -73,13 +73,13 @@ export default function AuthPage() {
       <h1 className="text-2xl font-bold tracking-tight">GameDay Soccer</h1>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
       {linkSent ? (
-        <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        <p className="rounded-lg bg-green-500/10 px-4 py-3 text-sm text-green-300">
           Check your email — a sign-in link is on its way to{" "}
           <strong>{email}</strong>.
         </p>
@@ -87,20 +87,20 @@ export default function AuthPage() {
         <>
           <button
             onClick={handleGoogle}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium shadow-sm hover:bg-gray-50 active:bg-gray-100"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm font-medium shadow-sm hover:bg-gray-800 active:bg-gray-800"
           >
             <GoogleIcon />
             Sign in with Google
           </button>
 
           <div className="relative flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-xs text-gray-400">or</span>
-            <div className="h-px flex-1 bg-gray-200" />
+            <div className="h-px flex-1 bg-gray-800" />
+            <span className="text-xs text-gray-500">or</span>
+            <div className="h-px flex-1 bg-gray-800" />
           </div>
 
           <form onSubmit={handleEmailLink} className="flex flex-col gap-3">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-gray-200">
               Email address
               <input
                 type="email"
@@ -108,12 +108,12 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-base text-white outline-none placeholder:text-gray-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
               />
             </label>
             <button
               type="submit"
-              className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 active:bg-green-800"
+              className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 active:bg-green-800"
             >
               Send sign-in link
             </button>

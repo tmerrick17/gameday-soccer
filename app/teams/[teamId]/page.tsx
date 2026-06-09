@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import PrototypeHome from "./_prototype/PrototypeHome"; // PROTOTYPE — remove with _prototype/
 import { useAuth } from "../../providers";
 import { getFirebase } from "../../../lib/firebase/config";
 import {
@@ -25,6 +26,7 @@ export default function TeamDetailPage({ params }: PageProps) {
   const { teamId } = use(params);
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams(); // PROTOTYPE — remove with _prototype/
   const [team, setTeam] = useState<TeamDoc | null>(null);
   const [members, setMembers] = useState<MemberDoc[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -92,7 +94,7 @@ export default function TeamDetailPage({ params }: PageProps) {
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -100,12 +102,29 @@ export default function TeamDetailPage({ params }: PageProps) {
   if (error || !team) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-6">
-        <p className="text-red-600">{error ?? "Team not found."}</p>
+        <p className="text-red-300">{error ?? "Team not found."}</p>
       </main>
     );
   }
 
   const inviteUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/join?code=${team.inviteCode}`;
+
+  // PROTOTYPE — Team-home A/B/C exploration (handoff tension #1).
+  // Mount the throwaway variants when ?variant= is present; otherwise render the
+  // real (current) layout below. Delete this block + _prototype/ once a variant wins.
+  if (searchParams.get("variant")) {
+    return (
+      <PrototypeHome
+        teamId={teamId}
+        team={team}
+        members={members}
+        inviteUrl={inviteUrl}
+        copied={copied}
+        onCopy={handleCopy}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6">
@@ -113,97 +132,97 @@ export default function TeamDetailPage({ params }: PageProps) {
         <h1 className="text-2xl font-bold tracking-tight">{team.name}</h1>
         <button
           onClick={handleSignOut}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50"
+          className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-800"
         >
           Sign out
         </button>
       </div>
 
       {/* Invite section */}
-      <section className="rounded-2xl border border-gray-200 p-4">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+      <section className="rounded-2xl border border-gray-800 p-4">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
           Invite coaches
         </h2>
         <div className="flex items-center gap-2">
-          <span className="flex-1 rounded-xl bg-gray-100 px-4 py-3 font-mono text-lg font-bold tracking-widest text-gray-800">
+          <span className="flex-1 rounded-xl bg-gray-800 px-4 py-3 font-mono text-lg font-bold tracking-widest text-gray-100">
             {team.inviteCode}
           </span>
           <button
             onClick={handleCopy}
-            className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium hover:bg-gray-50 active:bg-gray-100"
+            className="rounded-xl border border-gray-700 px-4 py-3 text-sm font-medium hover:bg-gray-800 active:bg-gray-800"
           >
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-gray-500">
           Share this code (or link) with co-coaches: {inviteUrl}
         </p>
       </section>
 
       {/* Team management links */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
           Manage
         </h2>
         <div className="flex flex-col gap-2">
           <Link
             href={`/teams/${teamId}/games/new`}
-            className="flex items-center justify-between rounded-xl bg-green-600 px-4 py-3 text-white hover:bg-green-700"
+            className="flex items-center justify-between rounded-xl bg-green-600 px-4 py-3 text-white hover:bg-green-500"
           >
             <span className="font-semibold">New game</span>
             <span>→</span>
           </Link>
           <Link
             href={`/teams/${teamId}/roster`}
-            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+            className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3 hover:bg-gray-800"
           >
             <span className="font-medium">Roster</span>
-            <span className="text-gray-400">→</span>
+            <span className="text-gray-500">→</span>
           </Link>
           <Link
             href={`/teams/${teamId}/formations`}
-            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+            className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3 hover:bg-gray-800"
           >
             <span className="font-medium">Formations</span>
-            <span className="text-gray-400">→</span>
+            <span className="text-gray-500">→</span>
           </Link>
           <Link
             href={`/teams/${teamId}/preferences`}
-            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+            className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3 hover:bg-gray-800"
           >
             <span className="font-medium">Preferences</span>
-            <span className="text-gray-400">→</span>
+            <span className="text-gray-500">→</span>
           </Link>
           <Link
             href={`/teams/${teamId}/season`}
-            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+            className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3 hover:bg-gray-800"
           >
             <span className="font-medium">Season totals</span>
-            <span className="text-gray-400">→</span>
+            <span className="text-gray-500">→</span>
           </Link>
         </div>
       </section>
 
       {/* Members section */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
           Coaches ({members.length})
         </h2>
         <ul className="flex flex-col gap-2">
           {members.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3"
+              className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3"
             >
               <div>
                 <p className="font-medium">{m.displayName}</p>
-                <p className="text-xs text-gray-400">{m.email}</p>
+                <p className="text-xs text-gray-500">{m.email}</p>
               </div>
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   m.role === "head-coach"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-green-500/15 text-green-300"
+                    : "bg-gray-800 text-gray-300"
                 }`}
               >
                 {m.role === "head-coach" ? "Head Coach" : "Coach"}

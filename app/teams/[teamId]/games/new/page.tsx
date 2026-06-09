@@ -140,7 +140,7 @@ export default function NewGamePage({ params }: PageProps) {
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -154,25 +154,25 @@ export default function NewGamePage({ params }: PageProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6 pb-24">
       <div className="flex items-center gap-3">
-        <Link href={`/teams/${teamId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">New Game</h1>
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
       )}
 
       {/* Step 1: Formation */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
           1 · Formation
         </h2>
         {formations.length === 0 ? (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-400">
             No formations yet.{" "}
-            <Link href={`/teams/${teamId}/formations`} className="text-green-600 underline">
+            <Link href={`/teams/${teamId}/formations`} className="text-green-400 underline">
               Add one first
             </Link>
             .
@@ -186,19 +186,19 @@ export default function NewGamePage({ params }: PageProps) {
                 onClick={() => setSelectedFormationId(f.id)}
                 className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left ${
                   selectedFormationId === f.id
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:bg-gray-50"
+                    ? "border-green-500/40 bg-green-500/15"
+                    : "border-gray-700 hover:bg-gray-800"
                 }`}
               >
                 <div
                   className={`h-4 w-4 rounded-full border-2 ${
                     selectedFormationId === f.id
                       ? "border-green-500 bg-green-500"
-                      : "border-gray-300"
+                      : "border-gray-700"
                   }`}
                 />
                 <span className="font-medium">{f.name}</span>
-                <span className="ml-auto text-xs text-gray-400">
+                <span className="ml-auto text-xs text-gray-500">
                   {f.positions.length} positions
                 </span>
               </button>
@@ -210,7 +210,7 @@ export default function NewGamePage({ params }: PageProps) {
       {/* Step 2: Attendance */}
       {formation && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             2 · Attendance
           </h2>
 
@@ -218,29 +218,29 @@ export default function NewGamePage({ params }: PageProps) {
             <span
               className={`font-medium ${
                 collapseResult?.shortHanded
-                  ? "text-red-600"
-                  : "text-green-700"
+                  ? "text-red-300"
+                  : "text-green-300"
               }`}
             >
               {squad.length} present / {sideSize} needed
             </span>
             {collapseResult && (
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+              <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
                 {collapseResult.mode}
               </span>
             )}
           </div>
 
           {collapseResult?.shortHanded && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
               Not enough players — need at least {sideSize} for this formation.
             </p>
           )}
 
           {roster.length === 0 ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               Roster is empty.{" "}
-              <Link href={`/teams/${teamId}/roster`} className="text-green-600 underline">
+              <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
                 Add players first
               </Link>
               .
@@ -254,15 +254,15 @@ export default function NewGamePage({ params }: PageProps) {
                     onClick={() => togglePlayer(player.id)}
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-2.5 text-left ${
                       squadIds.has(player.id)
-                        ? "border-green-200 bg-green-50"
-                        : "border-gray-100 bg-gray-50 opacity-50"
+                        ? "border-green-500/30 bg-green-500/10"
+                        : "border-gray-800 bg-gray-900 opacity-50"
                     }`}
                   >
                     <div
                       className={`h-4 w-4 rounded border-2 ${
                         squadIds.has(player.id)
                           ? "border-green-500 bg-green-500"
-                          : "border-gray-300"
+                          : "border-gray-700"
                       }`}
                     >
                       {squadIds.has(player.id) && (
@@ -279,10 +279,10 @@ export default function NewGamePage({ params }: PageProps) {
                     </div>
                     <span className="flex-1 text-sm font-medium">{player.name}</span>
                     {player.number !== undefined && (
-                      <span className="text-xs text-gray-400">#{player.number}</span>
+                      <span className="text-xs text-gray-500">#{player.number}</span>
                     )}
                     {player.keeperEligible && (
-                      <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                      <span className="rounded-full bg-blue-500/15 px-1.5 py-0.5 text-xs text-blue-300">
                         GK
                       </span>
                     )}
@@ -297,14 +297,14 @@ export default function NewGamePage({ params }: PageProps) {
       {/* Step 3: Keepers */}
       {formation && !collapseResult?.shortHanded && keeperPool.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             3 · Keepers
           </h2>
 
           {keeperPool.length === 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               No keeper-eligible players in the squad. Mark players as GK-eligible in the{" "}
-              <Link href={`/teams/${teamId}/roster`} className="text-green-600 underline">
+              <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
                 roster
               </Link>
               .
@@ -333,7 +333,7 @@ export default function NewGamePage({ params }: PageProps) {
           )}
 
           {(prefs.keeperMode ?? "half-swap") === "fixed" && keeper1Id && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               Fixed keeper mode — {keeperPool.find((p) => p.id === keeper1Id)?.name} plays both halves.
             </p>
           )}
@@ -341,12 +341,12 @@ export default function NewGamePage({ params }: PageProps) {
       )}
 
       {/* Generate */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-950 p-4">
         <div className="mx-auto max-w-md">
           <button
             onClick={handleGenerate}
             disabled={!canGenerate || generating}
-            className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-40"
+            className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-40"
           >
             {generating ? "Generating…" : "Generate rotation plan"}
           </button>
@@ -371,7 +371,7 @@ function KeeperPicker({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-xs font-medium text-gray-500">{label}</p>
+      <p className="text-xs font-medium text-gray-400">{label}</p>
       <div className="flex flex-wrap gap-2">
         {pool.map((p) => (
           <button
@@ -380,13 +380,13 @@ function KeeperPicker({
             onClick={() => onChange(p.id)}
             className={`relative rounded-xl border px-3 py-2 text-sm font-medium ${
               value === p.id
-                ? "border-green-500 bg-green-50 text-green-700"
-                : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                ? "border-green-500/40 bg-green-500/15 text-green-300"
+                : "border-gray-700 text-gray-200 hover:bg-gray-800"
             }`}
           >
             {p.name}
             {suggestedId === p.id && value !== p.id && (
-              <span className="ml-1.5 rounded-full bg-blue-100 px-1 py-0.5 text-xs font-normal text-blue-600">
+              <span className="ml-1.5 rounded-full bg-blue-500/15 px-1 py-0.5 text-xs font-normal text-blue-300">
                 suggested
               </span>
             )}

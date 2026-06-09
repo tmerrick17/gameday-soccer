@@ -42,7 +42,7 @@ export default function SeasonPage({ params }: PageProps) {
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -50,7 +50,7 @@ export default function SeasonPage({ params }: PageProps) {
   if (error) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-6">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-300">{error}</p>
       </main>
     );
   }
@@ -105,27 +105,27 @@ export default function SeasonPage({ params }: PageProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6">
       <div className="flex items-center gap-3">
-        <Link href={`/teams/${teamId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">Season Totals</h1>
-        <span className="ml-auto text-sm text-gray-400">
+        <span className="ml-auto text-sm text-gray-500">
           {totalGames} game{totalGames !== 1 ? "s" : ""}
         </span>
       </div>
 
       {totalGames === 0 ? (
-        <p className="text-gray-500">No games recorded yet.</p>
+        <p className="text-gray-400">No games recorded yet.</p>
       ) : (
         <>
           {/* Minute totals table */}
           <section>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-400">
               Minutes played
             </h2>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-gray-400">
+                <tr className="text-left text-xs text-gray-500">
                   <th className="pb-1 font-medium">Player</th>
                   <th className="pb-1 text-right font-medium">Season min</th>
                   <th className="pb-1 text-right font-medium">vs avg</th>
@@ -135,16 +135,16 @@ export default function SeasonPage({ params }: PageProps) {
                 {sorted.map(([id, mins]) => {
                   const drift = mins - meanMinutes;
                   return (
-                    <tr key={id} className="border-t border-gray-100">
+                    <tr key={id} className="border-t border-gray-800">
                       <td className="py-1.5">{playerName(id)}</td>
                       <td className="py-1.5 text-right font-medium tabular-nums">{mins}</td>
                       <td
                         className={`py-1.5 text-right tabular-nums ${
                           drift > 0
-                            ? "text-red-500"
+                            ? "text-red-400"
                             : drift < 0
-                            ? "text-blue-500"
-                            : "text-gray-400"
+                            ? "text-blue-400"
+                            : "text-gray-500"
                         }`}
                       >
                         {drift > 0 ? "+" : ""}
@@ -155,32 +155,32 @@ export default function SeasonPage({ params }: PageProps) {
                 })}
               </tbody>
             </table>
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-gray-500">
               Squad avg: {meanMinutes} min · {completedGames.length > 0 ? completedGames.length : totalGames} completed game{completedGames.length !== 1 ? "s" : ""}
             </p>
           </section>
 
           {/* Keeper ritual section */}
           {nextKeeperSuggestions && nextKeeperSuggestions.length === 2 && (
-            <section className="rounded-2xl border border-gray-200 p-4">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <section className="rounded-2xl border border-gray-700 p-4">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
                 Keeper ritual — next game suggestion
               </h2>
               <div className="flex gap-6">
                 <div>
-                  <p className="text-xs text-gray-400">Half 1</p>
+                  <p className="text-xs text-gray-500">Half 1</p>
                   <p className="font-semibold">
                     {playerName(nextKeeperSuggestions[0].keeperId)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">Half 2</p>
+                  <p className="text-xs text-gray-500">Half 2</p>
                   <p className="font-semibold">
                     {playerName(nextKeeperSuggestions[1].keeperId)}
                   </p>
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-400">
+              <p className="mt-2 text-xs text-gray-500">
                 Keepers swapped from last game to balance half-by-half duty.
               </p>
             </section>
@@ -188,11 +188,11 @@ export default function SeasonPage({ params }: PageProps) {
 
           {/* Defender short-straw ritual */}
           {sorted.length > 0 && (
-            <section className="rounded-2xl border border-gray-200 p-4">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <section className="rounded-2xl border border-gray-700 p-4">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
                 Starting ritual — fewest minutes
               </h2>
-              <p className="mb-2 text-xs text-gray-500">
+              <p className="mb-2 text-xs text-gray-400">
                 Players with the fewest season minutes — consider starting them or giving them extra time next game.
               </p>
               <ul className="flex flex-col gap-1">
@@ -202,7 +202,7 @@ export default function SeasonPage({ params }: PageProps) {
                   .map(([id, mins]) => (
                     <li key={id} className="flex items-center justify-between text-sm">
                       <span>{playerName(id)}</span>
-                      <span className="tabular-nums text-blue-600">{mins} min</span>
+                      <span className="tabular-nums text-blue-400">{mins} min</span>
                     </li>
                   ))}
               </ul>

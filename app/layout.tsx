@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "GameDay Soccer",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16a34a",
+  themeColor: "#030712",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

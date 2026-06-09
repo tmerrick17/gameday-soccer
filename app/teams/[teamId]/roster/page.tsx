@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import PrototypeRoster from "./_prototype/PrototypeRoster"; // PROTOTYPE — remove with _prototype/
 import { useAuth } from "../../../providers";
 import { getFirebase } from "../../../../lib/firebase/config";
 import {
@@ -27,6 +28,7 @@ export default function RosterPage({ params }: PageProps) {
   const { teamId } = use(params);
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams(); // PROTOTYPE — remove with _prototype/
   const [roster, setRoster] = useState<Player[]>([]);
   const [fetching, setFetching] = useState(true);
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
@@ -114,10 +116,17 @@ export default function RosterPage({ params }: PageProps) {
     });
   }
 
+  // PROTOTYPE — #2 roster "delete vs archive/deactivate" exploration. When
+  // ?variant= is present, render the throwaway variants on mock data. Delete this
+  // block + _prototype/ once a direction is chosen.
+  if (searchParams.get("variant")) {
+    return <PrototypeRoster teamId={teamId} />;
+  }
+
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -132,7 +141,7 @@ export default function RosterPage({ params }: PageProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-6">
       <div className="flex items-center gap-3">
-        <Link href={`/teams/${teamId}`} className="text-gray-400 hover:text-gray-600">
+        <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
         </Link>
         <h1 className="text-2xl font-bold tracking-tight">Roster</h1>
@@ -140,7 +149,7 @@ export default function RosterPage({ params }: PageProps) {
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
       )}
 
       {editingId !== null && (
@@ -160,9 +169,9 @@ export default function RosterPage({ params }: PageProps) {
           editingId === player.id ? null : (
             <li
               key={player.id}
-              className="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3"
+              className="flex items-center gap-3 rounded-xl border border-gray-800 px-4 py-3"
             >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-500/15 text-sm font-bold text-green-300">
                 {player.number ?? "–"}
               </div>
               <div className="min-w-0 flex-1">
@@ -174,13 +183,13 @@ export default function RosterPage({ params }: PageProps) {
               </div>
               <button
                 onClick={() => startEdit(player)}
-                className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100"
+                className="rounded-lg px-2 py-1 text-xs text-gray-400 hover:bg-gray-800"
               >
                 Edit
               </button>
               <button
                 onClick={() => handleDelete(player.id)}
-                className="rounded-lg px-2 py-1 text-xs text-red-500 hover:bg-red-50"
+                className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
               >
                 ✕
               </button>
@@ -192,7 +201,7 @@ export default function RosterPage({ params }: PageProps) {
       {editingId === null && (
         <button
           onClick={startAdd}
-          className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700"
+          className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500"
         >
           + Add player
         </button>
@@ -221,24 +230,24 @@ function PlayerForm({
   return (
     <form
       onSubmit={onSave}
-      className="flex flex-col gap-3 rounded-2xl border border-green-200 bg-green-50 p-4"
+      className="flex flex-col gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 p-4"
     >
-      <h2 className="text-sm font-semibold text-green-800">
+      <h2 className="text-sm font-semibold text-green-300">
         {isNew ? "Add player" : "Edit player"}
       </h2>
 
       <div className="flex gap-2">
-        <label className="flex-1 text-sm font-medium text-gray-700">
+        <label className="flex-1 text-sm font-medium text-gray-200">
           Name *
           <input
             autoFocus
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+            className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
           />
         </label>
-        <label className="w-20 text-sm font-medium text-gray-700">
+        <label className="w-20 text-sm font-medium text-gray-200">
           #
           <input
             type="number"
@@ -251,13 +260,13 @@ function PlayerForm({
                 number: e.target.value ? parseInt(e.target.value, 10) : undefined,
               }))
             }
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+            className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
           />
         </label>
       </div>
 
       <fieldset>
-        <legend className="text-xs font-medium text-gray-500">
+        <legend className="text-xs font-medium text-gray-400">
           Preferred roles (up to 2)
         </legend>
         <div className="mt-1 flex flex-wrap gap-2">
@@ -271,7 +280,7 @@ function PlayerForm({
                 className={`rounded-full px-3 py-1 text-xs font-medium ${
                   selected
                     ? "bg-green-600 text-white"
-                    : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                    : "border border-gray-700 text-gray-300 hover:bg-gray-800"
                 }`}
               >
                 {role}
@@ -281,7 +290,7 @@ function PlayerForm({
         </div>
       </fieldset>
 
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-gray-200">
         Stretch role
         <select
           value={form.stretchRole ?? ""}
@@ -291,7 +300,7 @@ function PlayerForm({
               stretchRole: (e.target.value as Role) || undefined,
             }))
           }
-          className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500"
+          className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500"
         >
           <option value="">None</option>
           {ROLES.map((r) => (
@@ -302,7 +311,7 @@ function PlayerForm({
         </select>
       </label>
 
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-gray-200">
         Ability (1–10, for Competitive strategy)
         <input
           type="number"
@@ -315,18 +324,18 @@ function PlayerForm({
               ability: e.target.value ? parseInt(e.target.value, 10) : undefined,
             }))
           }
-          className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+          className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
         />
       </label>
 
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <label className="flex items-center gap-2 text-sm font-medium text-gray-200">
         <input
           type="checkbox"
           checked={form.keeperEligible ?? false}
           onChange={(e) =>
             setForm((f) => ({ ...f, keeperEligible: e.target.checked || undefined }))
           }
-          className="h-4 w-4 rounded border-gray-300 accent-green-600"
+          className="h-4 w-4 rounded border-gray-700 accent-green-600"
         />
         Keeper eligible
       </label>
@@ -335,14 +344,14 @@ function PlayerForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="flex-1 rounded-xl border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+          className="flex-1 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save"}
         </button>

@@ -58,7 +58,7 @@ export default function TeamsPage() {
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -68,13 +68,13 @@ export default function TeamsPage() {
       <h1 className="text-2xl font-bold tracking-tight">Your Teams</h1>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
       {teams.length === 0 && !showForm && (
-        <p className="text-gray-500">No teams yet — create one below.</p>
+        <p className="text-gray-400">No teams yet — create one below.</p>
       )}
 
       <ul className="flex flex-col gap-2">
@@ -82,7 +82,7 @@ export default function TeamsPage() {
           <li key={team.id}>
             <Link
               href={`/teams/${team.id}`}
-              className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50 active:bg-gray-100"
+              className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3 hover:bg-gray-800 active:bg-gray-800"
             >
               <span className="font-medium">{team.name}</span>
               <ChevronRight />
@@ -93,7 +93,7 @@ export default function TeamsPage() {
 
       {showForm ? (
         <form onSubmit={handleCreate} className="flex flex-col gap-3">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-gray-200">
             Team name
             <input
               autoFocus
@@ -101,21 +101,21 @@ export default function TeamsPage() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="e.g. FC Galaxy"
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+              className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-base text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
             />
           </label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 rounded-xl border border-gray-700 px-4 py-3 text-sm font-medium text-gray-200 hover:bg-gray-800"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={creating}
-              className="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
             >
               {creating ? "Creating…" : "Create team"}
             </button>
@@ -125,13 +125,13 @@ export default function TeamsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowForm(true)}
-            className="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700"
+            className="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500"
           >
             + Create team
           </button>
           <Link
             href="/join"
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-xl border border-gray-700 px-4 py-3 text-center text-sm font-medium text-gray-200 hover:bg-gray-800"
           >
             Join with code
           </Link>

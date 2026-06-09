@@ -70,7 +70,7 @@ function JoinForm() {
   if (loading) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-400">Loading…</p>
       </main>
     );
   }
@@ -80,13 +80,13 @@ function JoinForm() {
       <h1 className="text-2xl font-bold tracking-tight">Join a Team</h1>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </p>
       )}
 
       <form onSubmit={handleJoin} className="flex flex-col gap-4">
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-gray-200">
           Invite code
           <input
             value={code}
@@ -96,18 +96,18 @@ function JoinForm() {
             placeholder="ABC123"
             maxLength={6}
             required
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 font-mono text-lg font-bold uppercase tracking-widest outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
+            className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 font-mono text-lg font-bold uppercase tracking-widest text-white outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30"
           />
         </label>
 
         {preview && (
-          <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+          <p className="rounded-lg bg-green-500/10 px-4 py-3 text-sm text-green-300">
             Joining <strong>{preview}</strong>
           </p>
         )}
 
         {code.length === 6 && preview === null && (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             No team found for that code.
           </p>
         )}
@@ -115,7 +115,7 @@ function JoinForm() {
         <button
           type="submit"
           disabled={joining || code.length !== 6}
-          className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+          className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
         >
           {joining ? "Joining…" : "Join team"}
         </button>
