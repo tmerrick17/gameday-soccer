@@ -1,7 +1,7 @@
 import {
   type Auth,
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
   signInWithEmailLink as firebaseSignInWithEmailLink,
@@ -12,7 +12,7 @@ const EMAIL_STORAGE_KEY = "gameday_signin_email";
 
 export async function signInWithGoogle(auth: Auth): Promise<void> {
   const provider = new GoogleAuthProvider();
-  await signInWithRedirect(auth, provider);
+  await signInWithPopup(auth, provider);
 }
 
 export async function sendSignInLink(
