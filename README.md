@@ -2,6 +2,28 @@
 
 A mobile-first PWA that turns the sideline "laminated index card" into a **deterministic rotation engine** plus a live game-day assistant for youth soccer. A coach sets up their team and preferences once; from then on the app builds a fair sub plan and, at any stoppage, tells them **exactly who subs in, who comes off, and into what position.**
 
+## Getting started
+
+```bash
+# 1. Clone
+git clone <repo-url>
+cd gameday-soccer
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure Firebase
+cp .env.local.example .env.local
+# Edit .env.local and fill in your Firebase project values
+
+# 4. Start the dev server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+> **Note:** Steps 2 and 3 are both required after cloning or pulling commits that add new packages. If you see `Module not found: Can't resolve 'firebase/auth'`, run `npm install`.
+
 ## The problem
 
 Coaching youth soccer means solving a live optimization problem every Saturday — who plays, who sits, who subs for whom, when, in what position — under equal-playing-time, development, goalie-rotation, and scoreboard constraints, with whoever actually showed up. Today it's a laminated card and sideline mental math: error-prone, hard to keep fair across a season, and it falls apart the moment kids are absent. This app builds the rotation for you.
