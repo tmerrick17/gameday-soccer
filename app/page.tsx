@@ -1,13 +1,21 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./providers";
+
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+    router.replace(user ? "/teams" : "/auth");
+  }, [user, loading, router]);
+
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 p-6">
-      <h1 className="text-2xl font-bold tracking-tight">GameDay Soccer</h1>
-      <p className="text-gray-600">
-        Turn the sideline laminated card into a fair, explainable rotation plan.
-      </p>
-      <p className="text-sm text-gray-400">
-        Scaffold ready — engine and screens coming next.
-      </p>
+    <main className="flex min-h-dvh items-center justify-center">
+      <p className="text-gray-400">Loading…</p>
     </main>
   );
 }
