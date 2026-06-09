@@ -87,6 +87,13 @@ service cloud.firestore {
       allow delete: if isSignedIn() && isHeadCoach(resource.data.teamId);
     }
 
+    // ── Team config (preferences, etc.) ──────────────────────────────────────
+    // Any team member can read and write config documents.
+
+    match /teams/{teamId}/config/{configDoc} {
+      allow read, write: if isMember(teamId);
+    }
+
     // ── Roster ────────────────────────────────────────────────────────────────
     // Any team member can read and write roster data.
 

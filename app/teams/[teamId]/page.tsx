@@ -160,6 +160,13 @@ export default function TeamDetailPage({ params }: PageProps) {
             <span className="font-medium">Formations</span>
             <span className="text-gray-400">→</span>
           </Link>
+          <Link
+            href={`/teams/${teamId}/preferences`}
+            className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50"
+          >
+            <span className="font-medium">Preferences</span>
+            <span className="text-gray-400">→</span>
+          </Link>
         </div>
       </section>
 

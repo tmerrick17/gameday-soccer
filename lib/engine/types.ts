@@ -81,9 +81,17 @@ export interface PositionAssignment {
 /** The Players on the field during a given Segment — one column of the grid. */
 export type Lineup = PositionAssignment[];
 
+/**
+ * Controls keeper assignment across halves.
+ * `half-swap` = different keeper each half (default); `fixed` = same keeper both halves.
+ */
+export type KeeperMode = "half-swap" | "fixed";
+
 /** Per-Team engine configuration. */
 export interface Preferences {
   strategy: Strategy;
+  /** How keepers are assigned across the two halves. Defaults to "half-swap". */
+  keeperMode?: KeeperMode;
   /** Players swapped at a single stoppage: 1 up to a configurable max. */
   maxWaveSize: number;
   /** Length of a Segment in minutes (~6 by default). */
