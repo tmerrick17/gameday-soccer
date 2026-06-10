@@ -30,6 +30,10 @@ Joining is **invite-only** (a code/link from the Head Coach); there is no public
 A season-long roster member, identified by a stable internal id that is never reused.
 _Avoid_: kid (in code/UI copy), participant
 
+**Archived**:
+A season-level status on a Player who has left the Team mid-season (quit, moved away). Removed from the active Roster and from attendance, but **reversible** — the stable id and all season history are retained, so past Games still resolve and season totals stay honest. The season-level counterpart to the per-game **Out**. Distinct from hard-delete, which is permitted *only* for a Player with zero Game references (a mis-typed add never used in any Squad or plan).
+_Avoid_: deleted, departed, removed, inactive
+
 **Number**:
 A Player's jersey number — a mutable display label, not identity. Teams may have no numbers at all.
 _Avoid_: id, jersey id
@@ -39,8 +43,12 @@ The full season-long list of Players on a team.
 _Avoid_: team list
 
 **Squad**:
-The subset of Players present *and currently available* for one game — the engine's actual input. Produced by marking attendance. An injured or departed Player leaves the Squad (shrinking it and firing a re-solve), rather than sitting out.
+The subset of Players present *and currently available* for one game — the engine's actual input. Produced by marking attendance. An **Out** Player leaves the Squad (shrinking it and firing a re-solve), rather than sitting out.
 _Avoid_: attendees, present list
+
+**Out**:
+A per-game status: a Squad member who becomes unavailable *during* a Game (injury, early pickup) and leaves the Squad mid-game, firing a re-solve. Scoped to the single Game only — it never touches the season Roster (that is **Archived**).
+_Avoid_: departed, injured (as a noun), benched
 
 **Lineup**:
 The Players on the field during a given segment — one column of the planning grid.
@@ -87,11 +95,15 @@ A per-Player rating used by the Competitive Strategy to decide who stays on. Ign
 _Avoid_: skill, rating, rank
 
 **Keeper pool**:
-The set of Players eligible to play goal (the "can-keep-goal" tag) — any size, often larger than the 2 needed. Each game, the coach selects exactly two keepers (one per half) from the pool, defaulting to the season rotation but overridable per game. The season tracker spreads goalie duty across the whole pool over the weeks.
+The set of Players eligible to play goal (the "can-keep-goal" tag) — any size, often larger than the 1–2 needed. Each game, the coach selects **one or two** keepers from the pool depending on **Keeper mode** (two in half-swap, one in fixed), defaulting to the season rotation but overridable per game. The season tracker spreads goalie duty across the whole pool over the weeks.
 _Avoid_: goalies, keeper list
 
+**Keeper mode**:
+A per-Team Preference for how goal duty is split across a Game's two halves. **Half-swap** (default): two keepers, one per half — the off-half keeper gets a **Cameo** to keep minutes level. **Fixed**: one keeper plays the whole Game in goal — no second keeper, no Cameo. Distinct from **Keeper lock** (a different axis: lock governs *within* a half and holds in both modes; Keeper mode governs *across* the two halves).
+_Avoid_: keeper rotation, goalie mode
+
 **Keeper lock**:
-A hard engine invariant: a keeper plays their entire half in goal — no mid-half goalie substitution. Keeper changes happen only at halftime. The off-half keeper's cameo is therefore always an outfield shift.
+A hard engine invariant: a keeper plays their entire half in goal — no mid-half goalie substitution. Keeper changes happen only at halftime. Holds in both **Keeper modes**. In half-swap, the off-half keeper's cameo is therefore always an outfield shift.
 _Avoid_: goalie hold
 
 **Cadence**:
@@ -101,6 +113,10 @@ _Avoid_: tempo, interval, rotation speed
 **Fairness check**:
 A post-generation *report* (not part of the optimization) on the minute spread a plan produced, flagging any Player drifting light or heavy. Describes the plan; never changes it.
 _Avoid_: balancer
+
+**Suggestion**:
+A season-fairness-derived, non-binding nudge surfaced before each Game — the app's scaffolding of the coach's weekly pre-game habit. Advisory only; the coach always overrides. Two instances: the **Keeper suggestion** (who plays goal next, rotating duty across the Keeper pool) and the **Starting suggestion** (who to start or give extra minutes — the fewest-season-minutes Players). The computation is named `suggest*` in the engine.
+_Avoid_: ritual, reminder, recommendation, tip
 
 ### Time & rotation
 
@@ -129,5 +145,5 @@ One player's continuous stretch of time on the field, spanning one or more segme
 _Avoid_: stint, run
 
 **Cameo**:
-A short field shift (~5 min) given to an off-half keeper so their playing time stays equal.
+A short field shift (~5 min) given to an off-half keeper so their playing time stays equal. Applies in **half-swap** Keeper mode only; in fixed mode there is no off-half keeper, so no Cameo.
 _Avoid_: appearance

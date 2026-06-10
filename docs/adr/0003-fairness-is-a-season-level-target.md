@@ -17,3 +17,4 @@ Fairness is measured **across the season**, not within a single game. Within any
 - The fairness check reports per-game spread but does not treat defender-hot minutes as an error.
 - A future dev must not "fix" the engine to force per-game equality — doing so would break defender shifts; that is why this is recorded.
 - Season tracking (the short-straw and front-line-label rotations, §2.10) is load-bearing for fairness, not just a nicety — though its automation is deferred to v2.
+- **Fixed Keeper mode is an explicit exemption from this model.** A Team running fixed mode (one keeper the whole Game; see CONTEXT.md "Keeper mode") deliberately keeps that Player in goal for a full Game, so they accrue maximum minutes with no off-half Cameo. The season fairness target does not apply to a fixed keeper while that mode is in use — this is opt-in, not a bug.

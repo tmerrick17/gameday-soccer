@@ -80,7 +80,7 @@ export default function SeasonPage({ params }: PageProps) {
     }
   }
 
-  // Keeper ritual — based on last game with keeperAssignments
+  // Keeper suggestion — based on last game with keeperAssignments
   const lastGame = [...games]
     .reverse()
     .find((g) => g.keeperAssignments?.length === 2);
@@ -160,11 +160,11 @@ export default function SeasonPage({ params }: PageProps) {
             </p>
           </section>
 
-          {/* Keeper ritual section */}
+          {/* Keeper suggestion section */}
           {nextKeeperSuggestions && nextKeeperSuggestions.length === 2 && (
             <section className="rounded-2xl border border-gray-700 p-4">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-                Keeper ritual — next game suggestion
+                Keeper suggestion — next game
               </h2>
               <div className="flex gap-6">
                 <div>
@@ -186,11 +186,11 @@ export default function SeasonPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Defender short-straw ritual */}
+          {/* Starting suggestion */}
           {sorted.length > 0 && (
             <section className="rounded-2xl border border-gray-700 p-4">
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-                Starting ritual — fewest minutes
+                Starting suggestion — fewest minutes
               </h2>
               <p className="mb-2 text-xs text-gray-400">
                 Players with the fewest season minutes — consider starting them or giving them extra time next game.
