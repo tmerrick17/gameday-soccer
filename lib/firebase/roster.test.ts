@@ -4,6 +4,8 @@ import {
   updatePlayer,
   deletePlayer,
   getRoster,
+  archivePlayer,
+  getFullRoster,
 } from "./roster";
 import type { Player } from "../engine/types";
 
@@ -96,7 +98,7 @@ describe("getRoster", () => {
     expect(result).toEqual([]);
   });
 
-  it("returns all players for the team", async () => {
+  it("returns active players for the team", async () => {
     const { getDocs } = await import("firebase/firestore");
     vi.mocked(getDocs).mockResolvedValueOnce({
       docs: [
@@ -109,6 +111,64 @@ describe("getRoster", () => {
     expect(result).toHaveLength(2);
     expect(result.map((p) => p.name).sort()).toEqual(["Alex", "Bea"]);
     expect(result.find((p) => p.name === "Bea")?.number).toBe(5);
+  });
+
+  it("filters out archived players", async () => {
+    const { getDocs } = await import("firebase/firestore");
+    vi.mocked(getDocs).mockResolvedValueOnce({
+      docs: [
+        { id: "p1", data: () => ({ id: "p1", name: "Alex" }) },
+        { id: "p2", data: () => ({ id: "p2", name: "Bea", status: "archived" }) },
+        { id: "p3", data: () => ({ id: "p3", name: "Cal", status: "active" }) },
+      ],
+    } as never);
+
+    const result = await getRoster(fakeDb, "team-1");
+    expect(result).toHaveLength(2);
+    expect(result.map((p) => p.name).sort()).toEqual(["Alex", "Cal"]);
+  });
+
+  it("does not expose status on returned Player objects", async () => {
+    const { getDocs } = await import("firebase/firestore");
+    vi.mocked(getDocs).mockResolvedValueOnce({
+      docs: [
+        { id: "p1", data: () => ({ id: "p1", name: "Alex", status: "active" }) },
+      ],
+    } as never);
+
+    const result = await getRoster(fakeDb, "team-1");
+    expect((result[0] as unknown as Record<string, unknown>).status).toBeUndefined();
+  });
+});
+
+// ── archivePlayer ─────────────────────────────────────────────────────────────
+
+describe("archivePlayer", () => {
+  it("calls updateDoc with status: archived", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    await archivePlayer(fakeDb, "team-1", "p-5");
+    expect(vi.mocked(updateDoc)).toHaveBeenCalledOnce();
+    const [ref, updates] = vi.mocked(updateDoc).mock.calls[0];
+    expect((ref as DocRef).path).toBe("teams/team-1/roster/p-5");
+    expect(updates).toEqual({ status: "archived" });
+  });
+});
+
+// ── getFullRoster ─────────────────────────────────────────────────────────────
+
+describe("getFullRoster", () => {
+  it("returns all players including archived, with status preserved", async () => {
+    const { getDocs } = await import("firebase/firestore");
+    vi.mocked(getDocs).mockResolvedValueOnce({
+      docs: [
+        { id: "p1", data: () => ({ id: "p1", name: "Alex" }) },
+        { id: "p2", data: () => ({ id: "p2", name: "Bea", status: "archived" }) },
+      ],
+    } as never);
+
+    const result = await getFullRoster(fakeDb, "team-1");
+    expect(result).toHaveLength(2);
+    expect(result.find((p) => p.name === "Bea")?.status).toBe("archived");
   });
 });
 
