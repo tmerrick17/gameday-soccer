@@ -57,7 +57,17 @@ export default function TeamsPage() {
     }
   }
 
-  if (loading || fetching) {
+  if (loading) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
+      </main>
+    );
+  }
+
+  if (!user) return null;
+
+  if (fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
         <p className="text-gray-500 dark:text-gray-400">Loading…</p>
