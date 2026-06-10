@@ -198,9 +198,10 @@ export default function RosterPage({ params }: PageProps) {
         </div>
 
         <p className="rounded-xl bg-blue-500/10 px-4 py-2.5 text-xs leading-relaxed text-blue-700 ring-1 ring-inset ring-blue-500/20 dark:text-blue-200">
-          Players are never deleted.{" "}
-          <b>Archive</b> keeps their stable id and season history but removes
-          them from the active roster — restore any time.
+          Players are archived, not deleted — their id and season history are
+          always kept. <b>Archive</b> removes them from the active roster and
+          they can be restored any time. A player with no game history can be
+          permanently deleted.
         </p>
 
         {error && (
