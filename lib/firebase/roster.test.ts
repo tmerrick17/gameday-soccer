@@ -5,6 +5,7 @@ import {
   deletePlayer,
   getRoster,
   archivePlayer,
+  restorePlayer,
   getFullRoster,
 } from "./roster";
 import type { Player } from "../engine/types";
@@ -151,6 +152,19 @@ describe("archivePlayer", () => {
     const [ref, updates] = vi.mocked(updateDoc).mock.calls[0];
     expect((ref as DocRef).path).toBe("teams/team-1/roster/p-5");
     expect(updates).toEqual({ status: "archived" });
+  });
+});
+
+// ── restorePlayer ────────────────────────────────────────────────────────────
+
+describe("restorePlayer", () => {
+  it("calls updateDoc with status: active", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    await restorePlayer(fakeDb, "team-1", "p-7");
+    expect(vi.mocked(updateDoc)).toHaveBeenCalledOnce();
+    const [ref, updates] = vi.mocked(updateDoc).mock.calls[0];
+    expect((ref as DocRef).path).toBe("teams/team-1/roster/p-7");
+    expect(updates).toEqual({ status: "active" });
   });
 });
 

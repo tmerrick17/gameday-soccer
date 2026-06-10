@@ -46,6 +46,16 @@ export async function archivePlayer(
   });
 }
 
+export async function restorePlayer(
+  db: Firestore,
+  teamId: string,
+  playerId: string
+): Promise<void> {
+  await updateDoc(doc(db, "teams", teamId, "roster", playerId), {
+    status: "active",
+  });
+}
+
 export async function deletePlayer(
   db: Firestore,
   teamId: string,
