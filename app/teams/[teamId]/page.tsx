@@ -168,7 +168,7 @@ export default function TeamDetailPage({ params }: PageProps) {
         <div className="flex flex-col gap-4 md:flex-1">
           {live ? (
             <Link
-              href={`/teams/${teamId}/games/${live.id}/live`}
+              href={`/teams/${teamId}/games/${live.id}`}
               className="rounded-3xl bg-red-600 p-6 text-white shadow-lg active:scale-[0.99] md:p-8"
             >
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
