@@ -3,6 +3,13 @@ export interface ExtractedPlayer {
   number?: number;
 }
 
+export class TransientHttpError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+    this.name = "TransientHttpError";
+  }
+}
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "google/gemma-4-31b-it:free";
 
@@ -47,7 +54,10 @@ export async function callOpenRouter(
     console.error(
       `[extractRoster] OpenRouter HTTP ${res.status}: ${text.slice(0, 500)}`
     );
-    throw new Error(`OpenRouter error ${res.status}: ${text.slice(0, 200)}`);
+    const isTransient = res.status === 429 || res.status >= 500;
+    const msg = `OpenRouter error ${res.status}: ${text.slice(0, 200)}`;
+    if (isTransient) throw new TransientHttpError(res.status, msg);
+    throw new Error(msg);
   }
 
   const json = (await res.json()) as {
@@ -58,23 +68,52 @@ export async function callOpenRouter(
   return content;
 }
 
+const BASE_DELAYS_MS = [1000, 2000];
+const MAX_HTTP_ATTEMPTS = 3;
+const MAX_PARSE_ATTEMPTS = 2;
+
+function jitter(ms: number): number {
+  return Math.round(ms * (0.7 + Math.random() * 0.6));
+}
+
 export async function extractWithRetry(
   imageBase64: string,
   apiKey: string,
-  fetcher: typeof fetch = fetch
+  fetcher: typeof fetch = fetch,
+  delayFn: (ms: number) => Promise<void> = (ms) =>
+    new Promise((r) => setTimeout(r, ms))
 ): Promise<ExtractedPlayer[]> {
-  const maxAttempts = 2;
+  let lastError: unknown;
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const raw = await callOpenRouter(imageBase64, apiKey, fetcher);
-    const players = parsePlayers(raw);
-    if (players !== null) return players;
+  for (let httpAttempt = 1; httpAttempt <= MAX_HTTP_ATTEMPTS; httpAttempt++) {
+    try {
+      const raw = await callOpenRouter(imageBase64, apiKey, fetcher);
+
+      // Retry once on malformed output within a successful HTTP round
+      const players = parsePlayers(raw);
+      if (players !== null) return players;
+
+      const raw2 = await callOpenRouter(imageBase64, apiKey, fetcher);
+      const players2 = parsePlayers(raw2);
+      if (players2 !== null) return players2;
+
+      console.error(
+        `[extractRoster] gave up after ${MAX_PARSE_ATTEMPTS} attempts — model output was not parseable`
+      );
+      throw new Error("Could not read the roster from the image. Please try again.");
+    } catch (err) {
+      if (!(err instanceof TransientHttpError)) throw err;
+      lastError = err;
+      if (httpAttempt < MAX_HTTP_ATTEMPTS) {
+        await delayFn(jitter(BASE_DELAYS_MS[httpAttempt - 1] ?? 2000));
+      }
+    }
   }
 
   console.error(
-    `[extractRoster] gave up after ${maxAttempts} attempts — model output was not parseable`
+    `[extractRoster] gave up after ${MAX_HTTP_ATTEMPTS} HTTP attempts — last error: ${String(lastError)}`
   );
-  throw new Error("Could not read the roster from the image. Please try again.");
+  throw lastError;
 }
 
 function parsePlayers(raw: string): ExtractedPlayer[] | null {

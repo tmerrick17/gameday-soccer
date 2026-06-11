@@ -50,6 +50,8 @@ describe("callOpenRouter", () => {
   });
 });
 
+const noDelay = () => Promise.resolve();
+
 describe("extractWithRetry", () => {
   let errorSpy: ReturnType<typeof vi.spyOn>;
 
@@ -66,9 +68,8 @@ describe("extractWithRetry", () => {
 
     await expect(extractWithRetry("imgdata", "key", mockFetch)).rejects.toThrow();
 
-    expect(errorSpy).toHaveBeenCalledOnce();
-    const [msg] = errorSpy.mock.calls[0] as [string];
-    expect(msg).toMatch(/attempt/i);
+    const msgs = (errorSpy.mock.calls as [string][]).map(([m]) => m);
+    expect(msgs.some((m) => /attempt/i.test(m))).toBe(true);
   });
 
   it("does not call console.error on a successful extraction", async () => {
@@ -77,5 +78,53 @@ describe("extractWithRetry", () => {
     await extractWithRetry("imgdata", "key", mockFetch);
 
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("gives up after 3 attempts when every call returns 429", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: () => Promise.resolve("rate limited"),
+    });
+
+    await expect(
+      extractWithRetry("imgdata", "key", mockFetch, noDelay)
+    ).rejects.toThrow();
+
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("fails immediately on a 400 without retrying", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: () => Promise.resolve("bad request"),
+    });
+
+    await expect(
+      extractWithRetry("imgdata", "key", mockFetch, noDelay)
+    ).rejects.toThrow();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries a 429 and resolves with players when the next attempt succeeds", async () => {
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        text: () => Promise.resolve("rate limited"),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(JSON.parse(OK_BODY)),
+      });
+
+    const players = await extractWithRetry("imgdata", "key", mockFetch, noDelay);
+
+    expect(players).toEqual([{ name: "Alice", number: 10 }]);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 });
