@@ -20,6 +20,7 @@ import { SignOutButton } from "../../../components/SignOutButton";
 import { downscaleImage } from "../../../../lib/import-roster/downscale";
 import { extractRosterFromImage } from "../../../../lib/firebase/roster-import";
 import { filterNewPlayers } from "../../../../lib/import-roster/dedup-players";
+import { mergeExtracted } from "../../../../lib/import-roster/merge-extracted";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -160,15 +161,26 @@ export default function RosterPage({ params }: PageProps) {
   }
 
   async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
     setImporting(true);
     setError(null);
     try {
-      const imageBase64 = await downscaleImage(file);
-      const extracted = await extractRosterFromImage(imageBase64);
-      const { toAdd, skippedCount } = filterNewPlayers(extracted, roster);
+      const results = await Promise.allSettled(
+        files.map(async (file) => {
+          const imageBase64 = await downscaleImage(file);
+          return extractRosterFromImage(imageBase64);
+        })
+      );
+
+      const batches = results
+        .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof extractRosterFromImage>>> => r.status === "fulfilled")
+        .map((r) => r.value);
+      const failedCount = results.filter((r) => r.status === "rejected").length;
+
+      const merged = mergeExtracted(batches);
+      const { toAdd, skippedCount } = filterNewPlayers(merged, roster);
       const { db } = getFirebase();
       for (const p of toAdd) {
         const player = await addPlayer(db, teamId, {
@@ -177,17 +189,26 @@ export default function RosterPage({ params }: PageProps) {
         });
         setRoster((prev) => [...prev, player]);
       }
+
       const added = toAdd.length;
-      let msg = "";
+      const parts: string[] = [];
       if (added > 0 && skippedCount > 0) {
-        msg = `Added ${added}, skipped ${skippedCount} already on roster.`;
+        parts.push(`Added ${added}, skipped ${skippedCount} already on roster.`);
       } else if (added > 0) {
-        msg = `Added ${added} player${added === 1 ? "" : "s"}.`;
-      } else {
-        msg = `Skipped ${skippedCount} already on roster.`;
+        parts.push(`Added ${added} player${added === 1 ? "" : "s"}.`);
+      } else if (batches.length > 0) {
+        parts.push(`Skipped ${skippedCount} already on roster.`);
       }
-      setImportStatus(msg);
-      setTimeout(() => setImportStatus(null), 3000);
+      if (failedCount > 0) {
+        parts.push(
+          `${failedCount} image${failedCount === 1 ? "" : "s"} couldn't be read — re-import ${failedCount === 1 ? "it" : "them"}.`
+        );
+      }
+      if (parts.length === 0) {
+        parts.push(`${failedCount} image${failedCount === 1 ? "" : "s"} couldn't be read — re-import ${failedCount === 1 ? "it" : "them"}.`);
+      }
+      setImportStatus(parts.join(" "));
+      setTimeout(() => setImportStatus(null), 4000);
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {
@@ -320,6 +341,7 @@ export default function RosterPage({ params }: PageProps) {
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 className="sr-only"
                 disabled={importing}
                 onChange={handleImportFile}
