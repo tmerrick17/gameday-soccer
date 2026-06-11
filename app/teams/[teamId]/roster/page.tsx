@@ -17,6 +17,8 @@ import {
 import type { Player, Role } from "../../../../lib/engine/types";
 import type { PlayerStatus } from "../../../../lib/firebase/roster";
 import { SignOutButton } from "../../../components/SignOutButton";
+import { downscaleImage } from "../../../../lib/import-roster/downscale";
+import { extractRosterFromImage } from "../../../../lib/firebase/roster-import";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -45,6 +47,8 @@ export default function RosterPage({ params }: PageProps) {
   const [saving, setSaving] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -154,6 +158,31 @@ export default function RosterPage({ params }: PageProps) {
     });
   }
 
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    setError(null);
+    try {
+      const imageBase64 = await downscaleImage(file);
+      const extracted = await extractRosterFromImage(imageBase64);
+      const { db } = getFirebase();
+      let added = 0;
+      for (const p of extracted) {
+        const player = await addPlayer(db, teamId, { name: p.name, ...(p.number !== undefined ? { number: p.number } : {}) });
+        setRoster((prev) => [...prev, player]);
+        added++;
+      }
+      setImportStatus(`Added ${added} player${added === 1 ? "" : "s"}.`);
+      setTimeout(() => setImportStatus(null), 3000);
+    } catch (e: unknown) {
+      setError((e as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  }
+
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
@@ -212,6 +241,12 @@ export default function RosterPage({ params }: PageProps) {
           </p>
         )}
 
+        {importStatus && (
+          <p className="rounded-lg bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-300">
+            {importStatus}
+          </p>
+        )}
+
         {editingId !== null && (
           <PlayerForm
             form={form}
@@ -260,12 +295,26 @@ export default function RosterPage({ params }: PageProps) {
         </ul>
 
         {editingId === null && (
-          <button
-            onClick={startAdd}
-            className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500"
-          >
-            + Add player
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={startAdd}
+              className="flex-1 rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500"
+            >
+              + Add player
+            </button>
+            <label
+              className={`flex cursor-pointer items-center gap-1.5 rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 ${importing ? "cursor-not-allowed opacity-60" : ""}`}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={importing}
+                onChange={handleImportFile}
+              />
+              {importing ? "Importing…" : "Import from screenshot"}
+            </label>
+          </div>
         )}
 
         {/* Archived section */}

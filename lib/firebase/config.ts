@@ -8,6 +8,7 @@ import {
   persistentMultipleTabManager,
   type Firestore,
 } from "firebase/firestore";
+import { getFunctions as firebaseGetFunctions, type Functions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,6 +22,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let functions: Functions;
 
 // Lazy-init so the module can be imported in any environment (tests, SSR)
 // without throwing on missing env vars.
@@ -38,8 +40,10 @@ function getFirebase() {
         tabManager: persistentMultipleTabManager(),
       }),
     });
+
+    functions = firebaseGetFunctions(app);
   }
-  return { app, auth, db };
+  return { app, auth, db, functions };
 }
 
 export { getFirebase };
