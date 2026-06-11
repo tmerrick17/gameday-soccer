@@ -8,6 +8,7 @@ import { getFirebase } from "../../../../lib/firebase/config";
 import { listGames, getRoster, type GameSessionDoc } from "../../../../lib/firebase";
 import { computeSeasonTotals, suggestNextKeepers } from "../../../../lib/engine/season";
 import type { Player } from "../../../../lib/engine/types";
+import { SignOutButton } from "../../../components/SignOutButton";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -112,6 +113,7 @@ export default function SeasonPage({ params }: PageProps) {
         <span className="ml-auto text-sm text-gray-500">
           {totalGames} game{totalGames !== 1 ? "s" : ""}
         </span>
+        <SignOutButton />
       </div>
 
       {totalGames === 0 ? (

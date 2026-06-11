@@ -16,6 +16,7 @@ import {
 } from "../../../../lib/firebase";
 import type { Player, Role } from "../../../../lib/engine/types";
 import type { PlayerStatus } from "../../../../lib/firebase/roster";
+import { SignOutButton } from "../../../components/SignOutButton";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -195,6 +196,7 @@ export default function RosterPage({ params }: PageProps) {
           <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
             {active.length} active
           </span>
+          <SignOutButton />
         </div>
 
         <p className="rounded-xl bg-blue-500/10 px-4 py-2.5 text-xs leading-relaxed text-blue-700 ring-1 ring-inset ring-blue-500/20 dark:text-blue-200">

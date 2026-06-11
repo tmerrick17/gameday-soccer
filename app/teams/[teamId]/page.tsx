@@ -11,7 +11,7 @@ import {
   type GameSessionDoc,
 } from "../../../lib/firebase/games";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { signOut } from "../../../lib/firebase/auth";
+import { SignOutButton } from "../../components/SignOutButton";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -123,12 +123,6 @@ export default function TeamDetailPage({ params }: PageProps) {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  async function handleSignOut() {
-    const { auth } = getFirebase();
-    await signOut(auth);
-    router.replace("/auth");
-  }
-
   if (loading || fetching) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
@@ -155,12 +149,7 @@ export default function TeamDetailPage({ params }: PageProps) {
         <h1 className="text-lg font-bold tracking-tight md:text-2xl">
           {team.name}
         </h1>
-        <button
-          onClick={handleSignOut}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
-        >
-          Sign out
-        </button>
+        <SignOutButton />
       </header>
 
       <div className="flex flex-1 flex-col gap-5 md:flex-row md:items-start md:gap-8">

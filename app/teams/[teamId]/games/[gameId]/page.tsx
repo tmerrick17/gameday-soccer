@@ -31,6 +31,7 @@ import type {
   Half,
   Wave,
 } from "../../../../../lib/engine/types";
+import { SignOutButton } from "../../../../components/SignOutButton";
 
 interface PageProps {
   params: Promise<{ teamId: string; gameId: string }>;
@@ -360,16 +361,17 @@ export default function GamePage({ params }: PageProps) {
                   {formatClock(clockSeconds)}
                 </p>
               </div>
-              {!isController ? (
-                <button
-                  onClick={handleTakeControl}
-                  className="rounded-lg border border-yellow-500 px-3 py-1.5 text-xs text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900"
-                >
-                  Take control
-                </button>
-              ) : (
-                <div className="w-24" />
-              )}
+              <div className="flex flex-col items-end gap-1">
+                {!isController && (
+                  <button
+                    onClick={handleTakeControl}
+                    className="rounded-lg border border-yellow-500 px-3 py-1.5 text-xs text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900"
+                  >
+                    Take control
+                  </button>
+                )}
+                <SignOutButton />
+              </div>
             </div>
 
             {/* Clock controls */}
@@ -615,6 +617,7 @@ export default function GamePage({ params }: PageProps) {
         <span className="ml-auto text-sm text-gray-500">
           {gameDoc.squadIds.length} players
         </span>
+        <SignOutButton />
       </div>
 
       {/* Start game CTA (draft only) */}
