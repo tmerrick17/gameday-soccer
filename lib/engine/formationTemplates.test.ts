@@ -15,8 +15,24 @@ describe("getTemplatesForSize", () => {
     expect(getTemplatesForSize(7)).toHaveLength(3);
   });
 
+  it("returns 3 templates for 8v8", () => {
+    expect(getTemplatesForSize(8)).toHaveLength(3);
+  });
+
+  it("returns 4 templates for 9v9", () => {
+    expect(getTemplatesForSize(9)).toHaveLength(4);
+  });
+
+  it("returns 2 templates for 10v10", () => {
+    expect(getTemplatesForSize(10)).toHaveLength(2);
+  });
+
+  it("returns 4 templates for 11v11", () => {
+    expect(getTemplatesForSize(11)).toHaveLength(4);
+  });
+
   it("returns empty array for sizes with no templates", () => {
-    expect(getTemplatesForSize(8)).toEqual([]);
+    expect(getTemplatesForSize(12)).toEqual([]);
   });
 });
 
@@ -110,6 +126,139 @@ describe("6v6 templates", () => {
     const names = noGkTemplates.map((t) => t.canonicalName);
     expect(names).toContain("2-2-2");
     expect(names).toContain("3-2-1");
+  });
+});
+
+describe("8v8 templates", () => {
+  const templates = FORMATION_TEMPLATES[8];
+
+  it("each template has exactly 8 positions", () => {
+    for (const t of templates) {
+      expect(t.positions).toHaveLength(8);
+    }
+  });
+
+  it("each template has exactly 1 Keeper", () => {
+    for (const t of templates) {
+      expect(t.positions.filter((p) => p.role === "Keeper")).toHaveLength(1);
+    }
+  });
+
+  it("each template passes validateFormation for size 8", () => {
+    for (const t of templates) {
+      const formation = {
+        name: t.canonicalName,
+        positions: t.positions.map((p, i) => ({ ...p, id: `pos-${i}` })),
+      };
+      expect(validateFormation(formation, 8)).toBeNull();
+    }
+  });
+
+  it("canonical names are 3-3-1, 2-3-2, 3-2-2", () => {
+    const names = templates.map((t) => t.canonicalName);
+    expect(names).toContain("3-3-1");
+    expect(names).toContain("2-3-2");
+    expect(names).toContain("3-2-2");
+  });
+});
+
+describe("9v9 templates", () => {
+  const templates = FORMATION_TEMPLATES[9];
+
+  it("each template has exactly 9 positions", () => {
+    for (const t of templates) {
+      expect(t.positions).toHaveLength(9);
+    }
+  });
+
+  it("each template has exactly 1 Keeper", () => {
+    for (const t of templates) {
+      expect(t.positions.filter((p) => p.role === "Keeper")).toHaveLength(1);
+    }
+  });
+
+  it("each template passes validateFormation for size 9", () => {
+    for (const t of templates) {
+      const formation = {
+        name: t.canonicalName,
+        positions: t.positions.map((p, i) => ({ ...p, id: `pos-${i}` })),
+      };
+      expect(validateFormation(formation, 9)).toBeNull();
+    }
+  });
+
+  it("canonical names are 3-3-2, 3-2-3, 2-3-3, 3-4-1", () => {
+    const names = templates.map((t) => t.canonicalName);
+    expect(names).toContain("3-3-2");
+    expect(names).toContain("3-2-3");
+    expect(names).toContain("2-3-3");
+    expect(names).toContain("3-4-1");
+  });
+});
+
+describe("10v10 templates", () => {
+  const templates = FORMATION_TEMPLATES[10];
+
+  it("each template has exactly 10 positions", () => {
+    for (const t of templates) {
+      expect(t.positions).toHaveLength(10);
+    }
+  });
+
+  it("each template has exactly 1 Keeper", () => {
+    for (const t of templates) {
+      expect(t.positions.filter((p) => p.role === "Keeper")).toHaveLength(1);
+    }
+  });
+
+  it("each template passes validateFormation for size 10", () => {
+    for (const t of templates) {
+      const formation = {
+        name: t.canonicalName,
+        positions: t.positions.map((p, i) => ({ ...p, id: `pos-${i}` })),
+      };
+      expect(validateFormation(formation, 10)).toBeNull();
+    }
+  });
+
+  it("canonical names are 3-3-3 and 4-3-2", () => {
+    const names = templates.map((t) => t.canonicalName);
+    expect(names).toContain("3-3-3");
+    expect(names).toContain("4-3-2");
+  });
+});
+
+describe("11v11 templates", () => {
+  const templates = FORMATION_TEMPLATES[11];
+
+  it("each template has exactly 11 positions", () => {
+    for (const t of templates) {
+      expect(t.positions).toHaveLength(11);
+    }
+  });
+
+  it("each template has exactly 1 Keeper", () => {
+    for (const t of templates) {
+      expect(t.positions.filter((p) => p.role === "Keeper")).toHaveLength(1);
+    }
+  });
+
+  it("each template passes validateFormation for size 11", () => {
+    for (const t of templates) {
+      const formation = {
+        name: t.canonicalName,
+        positions: t.positions.map((p, i) => ({ ...p, id: `pos-${i}` })),
+      };
+      expect(validateFormation(formation, 11)).toBeNull();
+    }
+  });
+
+  it("canonical names are 4-4-2, 4-3-3, 4-2-3-1, 3-5-2", () => {
+    const names = templates.map((t) => t.canonicalName);
+    expect(names).toContain("4-4-2");
+    expect(names).toContain("4-3-3");
+    expect(names).toContain("4-2-3-1");
+    expect(names).toContain("3-5-2");
   });
 });
 
