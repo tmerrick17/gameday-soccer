@@ -160,9 +160,7 @@ export default function RosterPage({ params }: PageProps) {
     });
   }
 
-  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    e.target.value = "";
+  async function processImageFiles(files: File[]) {
     if (files.length === 0) return;
     setImporting(true);
     setError(null);
@@ -215,6 +213,30 @@ export default function RosterPage({ params }: PageProps) {
       setImporting(false);
     }
   }
+
+  function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    void processImageFiles(files);
+  }
+
+  useEffect(() => {
+    if (!user) return;
+    function handlePaste(e: ClipboardEvent) {
+      if (importing) return;
+      const items = Array.from(e.clipboardData?.items ?? []);
+      const imageItem = items.find((item) => item.type.startsWith("image/"));
+      if (!imageItem) return;
+      const file = imageItem.getAsFile();
+      if (!file) return;
+      void processImageFiles([file]);
+    }
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  // processImageFiles is redefined each render but closes over roster/teamId,
+  // so the effect re-registers whenever those change — intentional.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, importing, roster, teamId]);
 
   if (loading || fetching) {
     return (
