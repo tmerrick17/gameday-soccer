@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
-import { extractWithRetry } from "./openrouter";
+import { extractWithRetry, TransientHttpError } from "./openrouter";
 
 const GEMMA_API_KEY = defineSecret("GEMMA_API_KEY");
 
@@ -32,6 +32,12 @@ export const extractRoster = onCall(
       return { players };
     } catch (err) {
       if (err instanceof HttpsError) throw err;
+      if (err instanceof TransientHttpError) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "The roster reader is busy right now — try again in a moment."
+        );
+      }
       throw new HttpsError("internal", (err as Error).message);
     }
   }

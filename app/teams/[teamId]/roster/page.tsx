@@ -21,6 +21,7 @@ import { downscaleImage } from "../../../../lib/import-roster/downscale";
 import { extractRosterFromImage } from "../../../../lib/firebase/roster-import";
 import { filterNewPlayers } from "../../../../lib/import-roster/dedup-players";
 import { mergeExtracted } from "../../../../lib/import-roster/merge-extracted";
+import { categorizeImportError } from "../../../../lib/import-roster/categorize-error";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -175,7 +176,10 @@ export default function RosterPage({ params }: PageProps) {
       const batches = results
         .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof extractRosterFromImage>>> => r.status === "fulfilled")
         .map((r) => r.value);
-      const failedCount = results.filter((r) => r.status === "rejected").length;
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+      const rateLimitedCount = failures.filter((r) => categorizeImportError(r.reason) === "rate-limited").length;
+      const tooLargeCount = failures.filter((r) => categorizeImportError(r.reason) === "too-large").length;
+      const unreadableCount = failures.filter((r) => categorizeImportError(r.reason) === "unreadable").length;
 
       const merged = mergeExtracted(batches);
       const { toAdd, skippedCount } = filterNewPlayers(merged, roster);
@@ -197,13 +201,21 @@ export default function RosterPage({ params }: PageProps) {
       } else if (batches.length > 0) {
         parts.push(`Skipped ${skippedCount} already on roster.`);
       }
-      if (failedCount > 0) {
+      if (rateLimitedCount > 0) {
+        parts.push("The roster reader is busy — try again in a moment.");
+      }
+      if (tooLargeCount > 0) {
         parts.push(
-          `${failedCount} image${failedCount === 1 ? "" : "s"} couldn't be read — re-import ${failedCount === 1 ? "it" : "them"}.`
+          `${tooLargeCount} image${tooLargeCount === 1 ? "" : "s"} ${tooLargeCount === 1 ? "is" : "are"} too large — use a smaller screenshot.`
+        );
+      }
+      if (unreadableCount > 0) {
+        parts.push(
+          `${unreadableCount} image${unreadableCount === 1 ? "" : "s"} couldn't be read — re-import ${unreadableCount === 1 ? "it" : "them"}.`
         );
       }
       if (parts.length === 0) {
-        parts.push(`${failedCount} image${failedCount === 1 ? "" : "s"} couldn't be read — re-import ${failedCount === 1 ? "it" : "them"}.`);
+        parts.push("Something went wrong — please try again.");
       }
       setImportStatus(parts.join(" "));
       setTimeout(() => setImportStatus(null), 4000);
