@@ -11,7 +11,10 @@ export class TransientHttpError extends Error {
 }
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "google/gemma-4-31b-it:free";
+// Paid (non-:free) slug: the :free variant shares one upstream pool that is
+// chronically rate-limited (observed 100% HTTP 429). The paid route costs
+// ~$0.00004/image. See issues #35/#38.
+const MODEL = "google/gemma-4-31b-it";
 
 const SYSTEM_PROMPT =
   "You are a soccer roster extractor. Given an image of a player roster, " +
