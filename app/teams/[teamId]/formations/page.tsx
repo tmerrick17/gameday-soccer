@@ -214,20 +214,32 @@ export default function FormationsPage({ params }: PageProps) {
               Start from a template
             </p>
             <div className="flex flex-wrap gap-2">
-              {getTemplatesForSize(sideSize).map((t) => (
-                <button
-                  key={t.canonicalName}
-                  type="button"
-                  onClick={() => applyTemplate(t.canonicalName)}
-                  className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors ${
-                    templateName === t.canonicalName
-                      ? "border-green-500 bg-green-500/20 text-green-300"
-                      : "border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800"
-                  }`}
-                >
-                  {t.canonicalName}
-                </button>
-              ))}
+              {(() => {
+                const templates = getTemplatesForSize(sideSize);
+                const hasMixed = templates.some(
+                  (t) => !t.positions.some((p) => p.role === "Keeper")
+                );
+                return templates.map((t) => {
+                  const hasKeeper = t.positions.some((p) => p.role === "Keeper");
+                  const label = hasMixed
+                    ? `${t.canonicalName} ${hasKeeper ? "+GK" : "(no GK)"}`
+                    : t.canonicalName;
+                  return (
+                    <button
+                      key={t.canonicalName}
+                      type="button"
+                      onClick={() => applyTemplate(t.canonicalName)}
+                      className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors ${
+                        templateName === t.canonicalName
+                          ? "border-green-500 bg-green-500/20 text-green-300"
+                          : "border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </div>
         )}
