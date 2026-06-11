@@ -19,6 +19,7 @@ import type { PlayerStatus } from "../../../../lib/firebase/roster";
 import { SignOutButton } from "../../../components/SignOutButton";
 import { downscaleImage } from "../../../../lib/import-roster/downscale";
 import { extractRosterFromImage } from "../../../../lib/firebase/roster-import";
+import { filterNewPlayers } from "../../../../lib/import-roster/dedup-players";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -167,14 +168,25 @@ export default function RosterPage({ params }: PageProps) {
     try {
       const imageBase64 = await downscaleImage(file);
       const extracted = await extractRosterFromImage(imageBase64);
+      const { toAdd, skippedCount } = filterNewPlayers(extracted, roster);
       const { db } = getFirebase();
-      let added = 0;
-      for (const p of extracted) {
-        const player = await addPlayer(db, teamId, { name: p.name, ...(p.number !== undefined ? { number: p.number } : {}) });
+      for (const p of toAdd) {
+        const player = await addPlayer(db, teamId, {
+          name: p.name,
+          ...(p.number !== undefined ? { number: p.number } : {}),
+        });
         setRoster((prev) => [...prev, player]);
-        added++;
       }
-      setImportStatus(`Added ${added} player${added === 1 ? "" : "s"}.`);
+      const added = toAdd.length;
+      let msg = "";
+      if (added > 0 && skippedCount > 0) {
+        msg = `Added ${added}, skipped ${skippedCount} already on roster.`;
+      } else if (added > 0) {
+        msg = `Added ${added} player${added === 1 ? "" : "s"}.`;
+      } else {
+        msg = `Skipped ${skippedCount} already on roster.`;
+      }
+      setImportStatus(msg);
       setTimeout(() => setImportStatus(null), 3000);
     } catch (e: unknown) {
       setError((e as Error).message);
