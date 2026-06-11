@@ -12,6 +12,9 @@ import {
   validateFormation,
 } from "../../../../lib/firebase";
 import type { Formation, Position, Role } from "../../../../lib/engine/types";
+import {
+  getTemplatesForSize,
+} from "../../../../lib/engine/formationTemplates";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -50,6 +53,7 @@ export default function FormationsPage({ params }: PageProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -70,6 +74,7 @@ export default function FormationsPage({ params }: PageProps) {
   }, [positions, sideSize]);
 
   function addPosition() {
+    setTemplateName(null);
     setPositions((prev) => [
       ...prev,
       { id: newPosId(), name: "", role: "Forward" },
@@ -77,13 +82,24 @@ export default function FormationsPage({ params }: PageProps) {
   }
 
   function removePosition(id: string) {
+    setTemplateName(null);
     setPositions((prev) => prev.filter((p) => p.id !== id));
   }
 
   function updatePosition(id: string, changes: Partial<Position>) {
+    setTemplateName(null);
     setPositions((prev) =>
       prev.map((p) => (p.id === id ? { ...p, ...changes } : p))
     );
+  }
+
+  function applyTemplate(name: string) {
+    const template = getTemplatesForSize(sideSize).find(
+      (t) => t.canonicalName === name
+    );
+    if (!template) return;
+    setPositions(template.positions.map((p) => ({ ...p, id: newPosId() })));
+    setTemplateName(name);
   }
 
   async function handleSave() {
@@ -93,11 +109,12 @@ export default function FormationsPage({ params }: PageProps) {
     try {
       const { db } = getFirebase();
       const formation = await saveFormation(db, teamId, {
-        name: generateFormationName(positions),
+        name: templateName ?? generateFormationName(positions),
         positions,
       });
       setFormations((prev) => [...prev, formation]);
       setPositions([]);
+      setTemplateName(null);
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {
@@ -175,7 +192,11 @@ export default function FormationsPage({ params }: PageProps) {
           Side size (players on field)
           <select
             value={sideSize}
-            onChange={(e) => setSideSize(parseInt(e.target.value, 10))}
+            onChange={(e) => {
+              setSideSize(parseInt(e.target.value, 10));
+              setPositions([]);
+              setTemplateName(null);
+            }}
             className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500"
           >
             {SIDE_SIZES.map((n) => (
@@ -185,6 +206,31 @@ export default function FormationsPage({ params }: PageProps) {
             ))}
           </select>
         </label>
+
+        {/* Template picker */}
+        {getTemplatesForSize(sideSize).length > 0 && (
+          <div>
+            <p className="mb-1 text-xs font-medium text-gray-400">
+              Start from a template
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {getTemplatesForSize(sideSize).map((t) => (
+                <button
+                  key={t.canonicalName}
+                  type="button"
+                  onClick={() => applyTemplate(t.canonicalName)}
+                  className={`rounded-lg border px-3 py-1 text-xs font-medium transition-colors ${
+                    templateName === t.canonicalName
+                      ? "border-green-500 bg-green-500/20 text-green-300"
+                      : "border-gray-700 text-gray-300 hover:border-gray-500 hover:bg-gray-800"
+                  }`}
+                >
+                  {t.canonicalName}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Position list */}
         <div className="flex flex-col gap-2">
