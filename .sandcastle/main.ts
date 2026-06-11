@@ -24,9 +24,9 @@ await run({
   // Maximum number of iterations (agent invocations) to run in a session.
   // Each iteration is a fresh agent session that re-reads the open-issue list,
   // so multiple iterations add resilience: if one session ends or dies, the next
-  // picks up the remaining unblocked issues. 4 covers the remaining engine work
-  // (#7, #8) with margin before it hits the Firebase-dependent UI slices.
-  maxIterations: 4,
+  // picks up the remaining unblocked issues. 14 covers slices 7-13 (7 issues)
+  // with 2x headroom for retries.
+  maxIterations: 14,
 
   // Branch strategy — merge-to-head creates a temporary branch for the agent
   // to work on, then merges the result back to HEAD when the run completes.

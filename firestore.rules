@@ -51,6 +51,13 @@ service cloud.firestore {
 
     // ── Members sub-collection ────────────────────────────────────────────────
 
+    // Collection-group read: lets a user discover their own membership docs
+    // across all teams. Required by getTeamsByUser() which uses collectionGroup("members").
+    // Scoped to the requesting user's own documents — no cross-user leakage.
+    match /{path=**}/members/{userId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
     match /teams/{teamId}/members/{userId} {
       // Any team member may read the membership list.
       allow read: if isMember(teamId);
