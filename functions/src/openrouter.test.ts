@@ -48,6 +48,19 @@ describe("callOpenRouter", () => {
 
     expect(errorSpy).not.toHaveBeenCalled();
   });
+
+  it("uses the provided mimeType in the image data URL", async () => {
+    const mockFetch = makeFetch(200, OK_BODY);
+
+    await callOpenRouter("imgdata", "key", mockFetch, "image/png");
+
+    const [, options] = mockFetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(options.body as string) as {
+      messages: Array<{ content: Array<{ image_url?: { url: string } }> }>;
+    };
+    const imageUrl = body.messages[0].content[0].image_url?.url ?? "";
+    expect(imageUrl).toMatch(/^data:image\/png;base64,/);
+  });
 });
 
 const noDelay = () => Promise.resolve();

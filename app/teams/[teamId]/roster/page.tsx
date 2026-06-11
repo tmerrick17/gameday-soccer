@@ -168,8 +168,8 @@ export default function RosterPage({ params }: PageProps) {
     try {
       const results = await Promise.allSettled(
         files.map(async (file) => {
-          const imageBase64 = await downscaleImage(file);
-          return extractRosterFromImage(imageBase64);
+          const image = await downscaleImage(file);
+          return extractRosterFromImage(image);
         })
       );
 

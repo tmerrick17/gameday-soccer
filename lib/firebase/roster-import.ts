@@ -6,14 +6,15 @@ export interface ExtractedPlayer {
   number?: number;
 }
 
-export async function extractRosterFromImage(
-  imageBase64: string
-): Promise<ExtractedPlayer[]> {
+export async function extractRosterFromImage(image: {
+  imageBase64: string;
+  mimeType: string;
+}): Promise<ExtractedPlayer[]> {
   const { functions } = getFirebase();
-  const fn = httpsCallable<{ imageBase64: string }, { players: ExtractedPlayer[] }>(
-    functions,
-    "extractRoster"
-  );
-  const result = await fn({ imageBase64 });
+  const fn = httpsCallable<
+    { imageBase64: string; mimeType: string },
+    { players: ExtractedPlayer[] }
+  >(functions, "extractRoster");
+  const result = await fn({ imageBase64: image.imageBase64, mimeType: image.mimeType });
   return result.data.players;
 }

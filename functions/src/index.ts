@@ -14,7 +14,10 @@ export const extractRoster = onCall(
       throw new HttpsError("unauthenticated", "Sign in to import a roster.");
     }
 
-    const { imageBase64 } = request.data as { imageBase64?: unknown };
+    const { imageBase64, mimeType } = request.data as {
+      imageBase64?: unknown;
+      mimeType?: unknown;
+    };
 
     if (typeof imageBase64 !== "string" || !imageBase64) {
       throw new HttpsError("invalid-argument", "imageBase64 is required.");
@@ -28,7 +31,15 @@ export const extractRoster = onCall(
     }
 
     try {
-      const players = await extractWithRetry(imageBase64, GEMMA_API_KEY.value());
+      const resolvedMimeType =
+        typeof mimeType === "string" && mimeType ? mimeType : "image/jpeg";
+      const players = await extractWithRetry(
+        imageBase64,
+        GEMMA_API_KEY.value(),
+        undefined,
+        undefined,
+        resolvedMimeType
+      );
       return { players };
     } catch (err) {
       if (err instanceof HttpsError) throw err;

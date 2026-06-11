@@ -1,7 +1,12 @@
 const MAX_LONGEST_EDGE = 1500;
 const JPEG_QUALITY = 0.85;
 
-export function downscaleImage(file: File): Promise<string> {
+export interface DownscaledImage {
+  imageBase64: string;
+  mimeType: string;
+}
+
+export function downscaleImage(file: File): Promise<DownscaledImage> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -22,8 +27,9 @@ export function downscaleImage(file: File): Promise<string> {
       }
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
-      // Strip the "data:image/jpeg;base64," prefix
-      resolve(dataUrl.split(",")[1]);
+      const mimeType = dataUrl.split(",")[0].split(":")[1].split(";")[0];
+      const imageBase64 = dataUrl.split(",")[1];
+      resolve({ imageBase64, mimeType });
     };
 
     img.onerror = () => {

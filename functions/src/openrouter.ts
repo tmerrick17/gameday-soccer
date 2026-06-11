@@ -22,7 +22,8 @@ const SYSTEM_PROMPT =
 export async function callOpenRouter(
   imageBase64: string,
   apiKey: string,
-  fetcher: typeof fetch = fetch
+  fetcher: typeof fetch = fetch,
+  mimeType = "image/jpeg"
 ): Promise<string> {
   const body = {
     model: MODEL,
@@ -32,7 +33,7 @@ export async function callOpenRouter(
         content: [
           {
             type: "image_url",
-            image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
+            image_url: { url: `data:${mimeType};base64,${imageBase64}` },
           },
           { type: "text", text: SYSTEM_PROMPT },
         ],
@@ -81,19 +82,20 @@ export async function extractWithRetry(
   apiKey: string,
   fetcher: typeof fetch = fetch,
   delayFn: (ms: number) => Promise<void> = (ms) =>
-    new Promise((r) => setTimeout(r, ms))
+    new Promise((r) => setTimeout(r, ms)),
+  mimeType = "image/jpeg"
 ): Promise<ExtractedPlayer[]> {
   let lastError: unknown;
 
   for (let httpAttempt = 1; httpAttempt <= MAX_HTTP_ATTEMPTS; httpAttempt++) {
     try {
-      const raw = await callOpenRouter(imageBase64, apiKey, fetcher);
+      const raw = await callOpenRouter(imageBase64, apiKey, fetcher, mimeType);
 
       // Retry once on malformed output within a successful HTTP round
       const players = parsePlayers(raw);
       if (players !== null) return players;
 
-      const raw2 = await callOpenRouter(imageBase64, apiKey, fetcher);
+      const raw2 = await callOpenRouter(imageBase64, apiKey, fetcher, mimeType);
       const players2 = parsePlayers(raw2);
       if (players2 !== null) return players2;
 
