@@ -1,4 +1,4 @@
-import type { Formation, Role } from "./types";
+import type { Formation, Position, Role } from "./types";
 
 /**
  * Total number of Positions on the field for a Formation. By the Formation
@@ -6,6 +6,21 @@ import type { Formation, Role } from "./types";
  */
 export function formationSize(formation: Formation): number {
   return formation.positions.length;
+}
+
+/** Display name derived from a Position list: GK first, then D/M/F counts. */
+export function generateFormationName(positions: Position[]): string {
+  const counts: Partial<Record<Role, number>> = {};
+  for (const p of positions) {
+    counts[p.role] = (counts[p.role] ?? 0) + 1;
+  }
+  const parts = [
+    counts["Keeper"] ? "GK" : "",
+    counts["Defender"] ? `${counts["Defender"]}D` : "",
+    counts["Mid"] ? `${counts["Mid"]}M` : "",
+    counts["Forward"] ? `${counts["Forward"]}F` : "",
+  ].filter(Boolean);
+  return parts.join("-") || "Custom";
 }
 
 /** How many Positions a Formation has in each Role. */

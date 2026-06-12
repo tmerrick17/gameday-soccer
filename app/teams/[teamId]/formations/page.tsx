@@ -15,6 +15,7 @@ import type { Formation, Position, Role } from "../../../../lib/engine/types";
 import {
   getTemplatesForSize,
 } from "../../../../lib/engine/formationTemplates";
+import { generateFormationName } from "../../../../lib/engine/formation";
 
 interface PageProps {
   params: Promise<{ teamId: string }>;
@@ -23,19 +24,6 @@ interface PageProps {
 const ROLES: Role[] = ["Forward", "Mid", "Defender", "Keeper"];
 const SIDE_SIZES = [5, 6, 7, 8, 9, 10, 11];
 
-function generateFormationName(positions: Position[]): string {
-  const counts: Partial<Record<Role, number>> = {};
-  for (const p of positions) {
-    counts[p.role] = (counts[p.role] ?? 0) + 1;
-  }
-  const parts = [
-    counts["Defender"] ? `${counts["Defender"]}D` : "",
-    counts["Mid"] ? `${counts["Mid"]}M` : "",
-    counts["Forward"] ? `${counts["Forward"]}F` : "",
-    counts["Keeper"] ? "+GK" : "",
-  ].filter(Boolean);
-  return parts.join("-") || "Custom";
-}
 
 let nextPosKey = 1;
 function newPosId() {

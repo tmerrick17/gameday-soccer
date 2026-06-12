@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countByRole, formationSize } from "./formation";
+import { countByRole, formationSize, generateFormationName } from "./formation";
 import type { Formation } from "./types";
 
 // 2-3-2+GK — the canonical 8v8 formation from docs/rotation-plan.md.
@@ -32,5 +32,20 @@ describe("countByRole", () => {
       Defender: 2,
       Keeper: 1,
     });
+  });
+});
+
+describe("generateFormationName", () => {
+  it("leads with GK when a Keeper position is present", () => {
+    expect(generateFormationName(eightVeight.positions)).toBe("GK-2D-3M-2F");
+  });
+
+  it("omits GK segment when no Keeper is present", () => {
+    const noGk = eightVeight.positions.filter((p) => p.role !== "Keeper");
+    expect(generateFormationName(noGk)).toBe("2D-3M-2F");
+  });
+
+  it("returns Custom for an empty position list", () => {
+    expect(generateFormationName([])).toBe("Custom");
   });
 });
