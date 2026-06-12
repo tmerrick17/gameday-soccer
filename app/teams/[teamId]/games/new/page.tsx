@@ -12,12 +12,15 @@ import {
   listGames,
   saveGame,
   updateGameSetup,
+  updateLiveGameSetup,
   getGame,
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
 import { suggestNextKeepers, halfSwapKeepersAreValid, pastGoalieIds } from "../../../../../lib/engine/season";
-import type { Player, Formation, Preferences, Half } from "../../../../../lib/engine/types";
+import { currentSegmentIndex, computeMinutesPlayed, adjustKeepersForLiveEdit } from "../../../../../lib/engine/live";
+import { resolveFrom } from "../../../../../lib/engine/resolveFrom";
+import type { Player, Formation, Preferences, Half, RotationPlan } from "../../../../../lib/engine/types";
 import type { KeeperAssignment } from "../../../../../lib/engine/generatePlan";
 
 interface PageProps {
@@ -48,6 +51,15 @@ export default function NewGamePage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [suggestedKeepers, setSuggestedKeepers] = useState<KeeperAssignment[]>([]);
   const [prevGoalieIds, setPrevGoalieIds] = useState<string[]>([]);
+  const [isLiveEdit, setIsLiveEdit] = useState(false);
+  const [liveEditGame, setLiveEditGame] = useState<{
+    plan: RotationPlan;
+    livePlan: RotationPlan | null;
+    keeperAssignments: KeeperAssignment[];
+    clockOffsetSeconds: number;
+    clockStartedAt: number | null;
+    isClockRunning: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -78,6 +90,17 @@ export default function NewGamePage({ params }: PageProps) {
           const ka2 = editGame.keeperAssignments.find((ka) => ka.halfIndex === 1);
           setKeeper1Id(ka1?.keeperId ?? null);
           setKeeper2Id(ka2?.keeperId ?? null);
+          if (editGame.status === "live") {
+            setIsLiveEdit(true);
+            setLiveEditGame({
+              plan: editGame.plan,
+              livePlan: editGame.livePlan ?? null,
+              keeperAssignments: editGame.keeperAssignments,
+              clockOffsetSeconds: editGame.clockOffsetSeconds ?? 0,
+              clockStartedAt: editGame.clockStartedAt ?? null,
+              isClockRunning: editGame.isClockRunning ?? false,
+            });
+          }
         } else {
           // New game mode: default all players present, suggest keepers from last game
           if (f.length === 1) setSelectedFormationId(f[0].id);
@@ -100,6 +123,20 @@ export default function NewGamePage({ params }: PageProps) {
   const shortHanded = formation ? squad.length < sideSize : false;
   const keeperPool = squad;
   const keeperMode = prefs.keeperMode ?? "half-swap";
+
+  // For live edits: determine which half is currently in progress (its keeper is locked)
+  const liveHalfIdx: 0 | 1 | null = (() => {
+    if (!isLiveEdit || !liveEditGame) return null;
+    const { clockOffsetSeconds, clockStartedAt, isClockRunning } = liveEditGame;
+    const elapsed = isClockRunning && clockStartedAt
+      ? clockOffsetSeconds + Math.floor((Date.now() - clockStartedAt) / 1000)
+      : clockOffsetSeconds;
+    const segMins = prefs.segmentMinutes ?? 6;
+    const halfMins = prefs.halfMinutes ?? 20;
+    const segsPerHalf = Math.round(halfMins / segMins);
+    const segIdx = currentSegmentIndex(elapsed, segMins);
+    return segIdx < segsPerHalf ? 0 : 1;
+  })();
 
   // Mirror keeper1 → keeper2 in fixed mode; clear keeper2 if it duplicates keeper1 in half-swap mode
   useEffect(() => {
@@ -131,10 +168,53 @@ export default function NewGamePage({ params }: PageProps) {
     setError(null);
     try {
       const { db } = getFirebase();
-      const keeperAssignments: KeeperAssignment[] = [
+      const formKeepers: KeeperAssignment[] = [
         { halfIndex: 0, keeperId: keeper1Id },
         { halfIndex: 1, keeperId: keeper2Id },
       ];
+
+      if (isLiveEdit && editGameId && liveEditGame) {
+        const { clockOffsetSeconds, clockStartedAt, isClockRunning } = liveEditGame;
+        const elapsedSeconds = isClockRunning && clockStartedAt
+          ? clockOffsetSeconds + Math.floor((Date.now() - clockStartedAt) / 1000)
+          : clockOffsetSeconds;
+        const segMins = prefs.segmentMinutes ?? 6;
+        const halfMins = prefs.halfMinutes ?? 20;
+        const segsPerHalf = Math.round(halfMins / segMins);
+        const segIdx = currentSegmentIndex(elapsedSeconds, segMins);
+
+        const adjustedKeepers = adjustKeepersForLiveEdit(
+          segIdx,
+          segsPerHalf,
+          liveEditGame.keeperAssignments,
+          formKeepers
+        );
+
+        const activePlan = liveEditGame.livePlan ?? liveEditGame.plan;
+        const minutesPlayed = computeMinutesPlayed(activePlan, segIdx, segMins);
+
+        const game = {
+          id: editGameId,
+          formation,
+          squad,
+          preferences: prefs,
+          halves: [
+            { keeperId: adjustedKeepers[0].keeperId, segments: [] },
+            { keeperId: adjustedKeepers[1].keeperId, segments: [] },
+          ] as [Half, Half],
+        };
+        const livePlan = resolveFrom(activePlan, game, adjustedKeepers, { minutesPlayed }, segIdx);
+
+        await updateLiveGameSetup(db, teamId, editGameId, {
+          formationId: formation.id,
+          squadIds: squad.map((p) => p.id),
+          keeperAssignments: adjustedKeepers,
+          livePlan,
+        });
+        router.push(`/teams/${teamId}/games/${editGameId}`);
+        return;
+      }
+
       const gameId = editGameId ?? `game-${Date.now()}`;
       const game = {
         id: gameId,
@@ -146,11 +226,11 @@ export default function NewGamePage({ params }: PageProps) {
           { keeperId: keeper2Id, segments: [] },
         ] as [Half, Half],
       };
-      const plan = generatePlan(game, keeperAssignments);
+      const plan = generatePlan(game, formKeepers);
       const setup = {
         formationId: formation.id,
         squadIds: squad.map((p) => p.id),
-        keeperAssignments,
+        keeperAssignments: formKeepers,
         plan,
       };
       if (editGameId) {
@@ -195,6 +275,12 @@ export default function NewGamePage({ params }: PageProps) {
           {editGameId ? "Edit Game" : "New Game"}
         </h1>
       </div>
+
+      {isLiveEdit && (
+        <p className="rounded-lg bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
+          Live game — clock continues running. Keeper changes take effect at the next half boundary.
+        </p>
+      )}
 
       {error && (
         <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
@@ -339,6 +425,7 @@ export default function NewGamePage({ params }: PageProps) {
                     value={keeper1Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
                     pastGoalieIds={prevGoalieIds}
+                    locked={isLiveEdit}
                     onChange={(id) => {
                       setKeeper1Id(id);
                       setKeeper2Id(id);
@@ -358,6 +445,7 @@ export default function NewGamePage({ params }: PageProps) {
                     value={keeper1Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
                     pastGoalieIds={prevGoalieIds}
+                    locked={isLiveEdit}
                     onChange={(id) => {
                       setKeeper1Id(id);
                       if (keeper2Id === id) setKeeper2Id(null);
@@ -369,6 +457,7 @@ export default function NewGamePage({ params }: PageProps) {
                     value={keeper2Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
                     pastGoalieIds={prevGoalieIds}
+                    locked={liveHalfIdx === 1}
                     onChange={setKeeper2Id}
                   />
                 </>
@@ -405,6 +494,7 @@ function KeeperPicker({
   value,
   suggestedId,
   pastGoalieIds,
+  locked = false,
   onChange,
 }: {
   label: string;
@@ -412,6 +502,7 @@ function KeeperPicker({
   value: string | null;
   suggestedId?: string | null;
   pastGoalieIds: string[];
+  locked?: boolean;
   onChange: (id: string) => void;
 }) {
   const pastGoalieSet = new Set(pastGoalieIds);
@@ -422,6 +513,19 @@ function KeeperPicker({
 
   function optionLabel(p: Player) {
     return suggestedId === p.id ? `${p.name} (suggested)` : p.name;
+  }
+
+  if (locked) {
+    const lockedPlayer = pool.find((p) => p.id === value) ?? null;
+    return (
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-gray-400">{label}</p>
+        <div className="flex items-center rounded-xl border border-gray-700 bg-gray-900/50 px-3 py-2 text-sm text-gray-400">
+          <span className="flex-1">{lockedPlayer?.name ?? value ?? "—"}</span>
+          <span className="text-xs text-yellow-500">locked</span>
+        </div>
+      </div>
+    );
   }
 
   return (

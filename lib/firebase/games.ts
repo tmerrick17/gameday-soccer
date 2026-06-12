@@ -76,6 +76,17 @@ export async function updateGameSetup(
   await updateDoc(doc(db, "teams", teamId, "games", gameId), input);
 }
 
+export async function updateLiveGameSetup(
+  db: Firestore,
+  teamId: string,
+  gameId: string,
+  input: Pick<GameSessionDoc, "formationId" | "squadIds" | "keeperAssignments"> & {
+    livePlan: RotationPlan;
+  }
+): Promise<void> {
+  await updateDoc(doc(db, "teams", teamId, "games", gameId), input);
+}
+
 export async function updateGameLiveState(
   db: Firestore,
   teamId: string,

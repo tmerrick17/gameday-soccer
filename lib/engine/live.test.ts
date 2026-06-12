@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { currentSegmentIndex, nextWave } from "./live";
+import { currentSegmentIndex, nextWave, adjustKeepersForLiveEdit } from "./live";
 import type { RotationPlan } from "./types";
+import type { KeeperAssignment } from "./generatePlan";
 
 // ── currentSegmentIndex ───────────────────────────────────────────────────────
 
@@ -78,5 +79,49 @@ describe("nextWave", () => {
   it("returns the closest upcoming wave, not a distant one", () => {
     const wave = nextWave(STUB_PLAN, 5);
     expect(wave!.atSegmentIndex).toBe(7);
+  });
+});
+
+// ── adjustKeepersForLiveEdit ──────────────────────────────────────────────────
+
+const ORIG_KEEPERS: KeeperAssignment[] = [
+  { halfIndex: 0, keeperId: "k-orig-0" },
+  { halfIndex: 1, keeperId: "k-orig-1" },
+];
+
+const NEW_KEEPERS: KeeperAssignment[] = [
+  { halfIndex: 0, keeperId: "k-new-0" },
+  { halfIndex: 1, keeperId: "k-new-1" },
+];
+
+const SEGS_PER_HALF = 4;
+
+describe("adjustKeepersForLiveEdit", () => {
+  it("in first half: locks half-0 keeper to original, allows half-1 change", () => {
+    const adjusted = adjustKeepersForLiveEdit(2, SEGS_PER_HALF, ORIG_KEEPERS, NEW_KEEPERS);
+    const half0 = adjusted.find((ka) => ka.halfIndex === 0)!;
+    const half1 = adjusted.find((ka) => ka.halfIndex === 1)!;
+    expect(half0.keeperId).toBe("k-orig-0");
+    expect(half1.keeperId).toBe("k-new-1");
+  });
+
+  it("in second half: locks both keepers to originals regardless of new selections", () => {
+    const adjusted = adjustKeepersForLiveEdit(5, SEGS_PER_HALF, ORIG_KEEPERS, NEW_KEEPERS);
+    const half0 = adjusted.find((ka) => ka.halfIndex === 0)!;
+    const half1 = adjusted.find((ka) => ka.halfIndex === 1)!;
+    expect(half0.keeperId).toBe("k-orig-0");
+    expect(half1.keeperId).toBe("k-orig-1");
+  });
+
+  it("at the exact half boundary (segIdx === segsPerHalf) treats it as second half", () => {
+    const adjusted = adjustKeepersForLiveEdit(SEGS_PER_HALF, SEGS_PER_HALF, ORIG_KEEPERS, NEW_KEEPERS);
+    expect(adjusted.find((ka) => ka.halfIndex === 1)!.keeperId).toBe("k-orig-1");
+  });
+
+  it("returns exactly two keeper assignments with halfIndex 0 and 1", () => {
+    const adjusted = adjustKeepersForLiveEdit(1, SEGS_PER_HALF, ORIG_KEEPERS, NEW_KEEPERS);
+    expect(adjusted).toHaveLength(2);
+    expect(adjusted.some((ka) => ka.halfIndex === 0)).toBe(true);
+    expect(adjusted.some((ka) => ka.halfIndex === 1)).toBe(true);
   });
 });

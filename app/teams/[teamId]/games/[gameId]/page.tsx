@@ -376,23 +376,31 @@ export default function GamePage({ params }: PageProps) {
 
             {/* Clock controls */}
             {isController && (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleClockToggle}
-                  className={`flex-1 rounded-xl py-3 text-sm font-semibold ${
-                    gameDoc.isClockRunning
-                      ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                      : "bg-green-600 text-white hover:bg-green-500"
-                  }`}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleClockToggle}
+                    className={`flex-1 rounded-xl py-3 text-sm font-semibold ${
+                      gameDoc.isClockRunning
+                        ? "bg-yellow-500 text-black hover:bg-yellow-400"
+                        : "bg-green-600 text-white hover:bg-green-500"
+                    }`}
+                  >
+                    {gameDoc.isClockRunning ? "⏸ Pause" : "▶ Start"}
+                  </button>
+                  <button
+                    onClick={handleEndGame}
+                    className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                  >
+                    End game
+                  </button>
+                </div>
+                <Link
+                  href={`/teams/${teamId}/games/new?edit=${gameId}`}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-600 py-2.5 text-sm font-medium text-gray-400 hover:bg-gray-800"
                 >
-                  {gameDoc.isClockRunning ? "⏸ Pause" : "▶ Start"}
-                </button>
-                <button
-                  onClick={handleEndGame}
-                  className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-200 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
-                >
-                  End game
-                </button>
+                  ✎ Edit setup
+                </Link>
               </div>
             )}
 
