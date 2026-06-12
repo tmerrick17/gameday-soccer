@@ -46,7 +46,10 @@ await run({
       // onSandboxReady runs once after the sandbox is initialised and the repo is
       // synced in, before the agent starts. Use it to install dependencies or run
       // any other setup steps your project needs.
-      onSandboxReady: [{ command: "npm install" }],
+      // 5-min timeout (default is 60s): reconciling the copied node_modules
+      // has intermittently run past 60s and aborted the run before the agent
+      // starts. The headroom absorbs that without changing behaviour.
+      onSandboxReady: [{ command: "npm install", timeoutMs: 300000 }],
     },
   },
 });
