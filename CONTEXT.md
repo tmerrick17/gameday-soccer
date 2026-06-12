@@ -136,10 +136,6 @@ _Avoid_: block, slice, period
 The set of players who enter and exit together at a single stoppage — a substitution *event*, not a duration. Size is a tunable Preference (1 up to a configurable max; this coach's max is 2, others run 3+).
 _Avoid_: rotation, swap, group
 
-**Breather**:
-A Position a few Players rotate through purely for rest when Subs are too few (1–2) to run full Waves. Keeps short-rostered kids from playing the whole game flat-out.
-_Avoid_: rest spot
-
 **Shift**:
 One player's continuous stretch of time on the field, spanning one or more segments.
 _Avoid_: stint, run

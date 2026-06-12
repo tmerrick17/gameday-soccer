@@ -106,17 +106,11 @@ Sub at the nearest stoppage near each 5-min mark. **SITS (Subs)** is the 3 resti
 
 ---
 
-## 7. Short-roster collapse (when the Squad is below full)
+## 7. Short-roster (when the Squad is below full)
 
-Collapse keys off **Subs available = Squad size − on-field size (8)**, not raw headcount:
+Thin benches are handled naturally by the engine's **max wave size** cap and bench depth — no dedicated rest-position rotation is needed. The max wave size limits how many Players swap at each stoppage, so a smaller bench automatically produces longer shifts and fewer waves per game.
 
-| Squad present | Subs | Plan |
-|---------------|------|------|
-| **13–11** | 5–3 | Run the chart. Waves as designed. |
-| **10–9** | 2–1 | Drop the fast Waves. Rotate 1–2 Players through a **Breather** Position every ~6–8 min so nobody's gassed. |
-| **8** | 0 | No subs — everyone plays all 40. Keep keeper-per-Half if you can. |
-
-**Always preserve regardless of bodies:** keeper changes at halftime (Keeper lock) + Defenders on a longer Cadence than the front line.
+The app blocks plan generation when the Squad is **short-handed** (fewer Players present than the on-field side size). Keeper changes at halftime (Keeper lock) and per-Role Cadence are always preserved regardless of roster size.
 
 ---
 

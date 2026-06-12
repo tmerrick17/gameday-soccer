@@ -13,7 +13,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   segmentMinutes: 6,
   halfMinutes: 20,
   cadenceByRole: { Forward: 12, Mid: 12, Defender: 18, Keeper: 20 },
-  fullWavesThreshold: 3,
 };
 
 const prefPath = (teamId: string) =>

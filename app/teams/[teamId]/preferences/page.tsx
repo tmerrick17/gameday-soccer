@@ -85,7 +85,7 @@ export default function PreferencesPage({ params }: PageProps) {
     );
   }
 
-  function stepper(field: "maxWaveSize" | "fullWavesThreshold", min: number, max: number) {
+  function stepper(field: "maxWaveSize", min: number, max: number) {
     const value = (prefs?.[field] as number | undefined) ?? DEFAULT_PREFERENCES[field] ?? min;
     return (
       <div className="flex items-center gap-3">
@@ -263,14 +263,6 @@ export default function PreferencesPage({ params }: PageProps) {
         />
       </section>
 
-      {/* Collapse threshold */}
-      <section className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-sm font-semibold text-gray-200">Min subs for full waves</h2>
-          <p className="text-xs text-gray-500">Below this, use breather mode</p>
-        </div>
-        {stepper("fullWavesThreshold", 1, 5)}
-      </section>
     </main>
   );
 }

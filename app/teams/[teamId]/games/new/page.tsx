@@ -14,7 +14,6 @@ import {
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
-import { resolve } from "../../../../../lib/engine/collapsePolicy";
 import { suggestNextKeepers } from "../../../../../lib/engine/season";
 import type { Player, Formation, Preferences, Half } from "../../../../../lib/engine/types";
 import type { KeeperAssignment } from "../../../../../lib/engine/generatePlan";
@@ -75,9 +74,7 @@ export default function NewGamePage({ params }: PageProps) {
   const formation = formations.find((f) => f.id === selectedFormationId) ?? null;
   const sideSize = formation?.positions.length ?? 0;
   const squad = roster.filter((p) => squadIds.has(p.id));
-  const collapseResult = formation
-    ? resolve(squad.length, sideSize, prefs)
-    : null;
+  const shortHanded = formation ? squad.length < sideSize : false;
   const keeperPool = squad.filter((p) => p.keeperEligible);
 
   // If fixed keeper mode, mirror keeper 1 → keeper 2
@@ -149,7 +146,7 @@ export default function NewGamePage({ params }: PageProps) {
     !!formation &&
     !!keeper1Id &&
     !!keeper2Id &&
-    !collapseResult?.shortHanded;
+    !shortHanded;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6 pb-24">
@@ -217,21 +214,16 @@ export default function NewGamePage({ params }: PageProps) {
           <div className="flex items-center gap-2 text-sm">
             <span
               className={`font-medium ${
-                collapseResult?.shortHanded
+                shortHanded
                   ? "text-red-300"
                   : "text-green-300"
               }`}
             >
               {squad.length} present / {sideSize} needed
             </span>
-            {collapseResult && (
-              <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-300">
-                {collapseResult.mode}
-              </span>
-            )}
           </div>
 
-          {collapseResult?.shortHanded && (
+          {shortHanded && (
             <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
               Not enough players — need at least {sideSize} for this formation.
             </p>
@@ -295,7 +287,7 @@ export default function NewGamePage({ params }: PageProps) {
       )}
 
       {/* Step 3: Keepers */}
-      {formation && !collapseResult?.shortHanded && keeperPool.length > 0 && (
+      {formation && !shortHanded && keeperPool.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             3 · Keepers
