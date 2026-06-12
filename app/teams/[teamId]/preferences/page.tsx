@@ -16,6 +16,10 @@ interface PageProps {
   params: Promise<{ teamId: string }>;
 }
 
+const SAFE =
+  "pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] " +
+  "pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))]";
+
 const STRATEGIES: { value: Strategy; label: string; description: string }[] = [
   { value: "equal-time", label: "Equal Time", description: "Fewest minutes first" },
   { value: "competitive", label: "Competitive", description: "Highest ability first" },
@@ -119,7 +123,7 @@ export default function PreferencesPage({ params }: PageProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6 pb-16">
+    <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
       <div className="flex items-center gap-3">
         <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
@@ -132,6 +136,9 @@ export default function PreferencesPage({ params }: PageProps) {
           <span className="ml-auto text-xs text-green-400">Saved</span>
         )}
       </div>
+
+      {/* Preference sections: single column on mobile, 2-column grid on tablet/desktop */}
+      <div className="grid gap-6 md:grid-cols-2">
 
       {/* Strategy */}
       <section className="flex flex-col gap-3">
@@ -263,6 +270,7 @@ export default function PreferencesPage({ params }: PageProps) {
         />
       </section>
 
+      </div>
     </main>
   );
 }
