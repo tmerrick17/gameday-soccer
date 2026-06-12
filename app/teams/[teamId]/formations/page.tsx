@@ -90,6 +90,13 @@ export default function FormationsPage({ params }: PageProps) {
     setTemplateName(name);
   }
 
+  function handleClear() {
+    if (positions.length === 0) return;
+    if (!confirm("Clear all positions?")) return;
+    setPositions([]);
+    setTemplateName(null);
+  }
+
   async function handleSave() {
     if (validationError) return;
     setSaving(true);
@@ -172,9 +179,18 @@ export default function FormationsPage({ params }: PageProps) {
 
       {/* Formation builder */}
       <section className="flex flex-col gap-4 rounded-2xl border border-gray-800 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-          New Formation
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+            New Formation
+          </h2>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-xs text-gray-500 hover:text-gray-300"
+          >
+            Clear
+          </button>
+        </div>
 
         <label className="text-sm font-medium text-gray-200">
           Side size (players on field)
