@@ -22,6 +22,10 @@ interface PageProps {
   params: Promise<{ teamId: string }>;
 }
 
+const SAFE =
+  "pt-[max(1.25rem,env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] " +
+  "pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))]";
+
 export default function NewGamePage({ params }: PageProps) {
   const { teamId } = use(params);
   const { user, loading } = useAuth();
@@ -149,7 +153,7 @@ export default function NewGamePage({ params }: PageProps) {
     !shortHanded;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6 pb-24">
+    <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
       <div className="flex items-center gap-3">
         <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
@@ -161,180 +165,186 @@ export default function NewGamePage({ params }: PageProps) {
         <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
       )}
 
-      {/* Step 1: Formation */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-          1 · Formation
-        </h2>
-        {formations.length === 0 ? (
-          <p className="text-sm text-gray-400">
-            No formations yet.{" "}
-            <Link href={`/teams/${teamId}/formations`} className="text-green-400 underline">
-              Add one first
-            </Link>
-            .
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {formations.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setSelectedFormationId(f.id)}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left ${
-                  selectedFormationId === f.id
-                    ? "border-green-500/40 bg-green-500/15"
-                    : "border-gray-700 hover:bg-gray-800"
-                }`}
-              >
-                <div
-                  className={`h-4 w-4 rounded-full border-2 ${
-                    selectedFormationId === f.id
-                      ? "border-green-500 bg-green-500"
-                      : "border-gray-700"
-                  }`}
-                />
-                <span className="font-medium">{f.name}</span>
-                <span className="ml-auto text-xs text-gray-500">
-                  {f.positions.length} positions
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Step 2: Attendance */}
-      {formation && (
+      {/* Responsive two-column grid: formation left, attendance+keepers right on md+ */}
+      <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
+        {/* Step 1: Formation */}
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            2 · Attendance
+            1 · Formation
           </h2>
-
-          <div className="flex items-center gap-2 text-sm">
-            <span
-              className={`font-medium ${
-                shortHanded
-                  ? "text-red-300"
-                  : "text-green-300"
-              }`}
-            >
-              {squad.length} present / {sideSize} needed
-            </span>
-          </div>
-
-          {shortHanded && (
-            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
-              Not enough players — need at least {sideSize} for this formation.
-            </p>
-          )}
-
-          {roster.length === 0 ? (
+          {formations.length === 0 ? (
             <p className="text-sm text-gray-400">
-              Roster is empty.{" "}
-              <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
-                Add players first
+              No formations yet.{" "}
+              <Link href={`/teams/${teamId}/formations`} className="text-green-400 underline">
+                Add one first
               </Link>
               .
             </p>
           ) : (
-            <ul className="flex flex-col gap-1">
-              {roster.map((player) => (
-                <li key={player.id}>
-                  <button
-                    type="button"
-                    onClick={() => togglePlayer(player.id)}
-                    className={`flex w-full items-center gap-3 rounded-xl border px-4 py-2.5 text-left ${
-                      squadIds.has(player.id)
-                        ? "border-green-500/30 bg-green-500/10"
-                        : "border-gray-800 bg-gray-900 opacity-50"
+            <div className="flex flex-col gap-2">
+              {formations.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setSelectedFormationId(f.id)}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left ${
+                    selectedFormationId === f.id
+                      ? "border-green-500/40 bg-green-500/15"
+                      : "border-gray-700 hover:bg-gray-800"
+                  }`}
+                >
+                  <div
+                    className={`h-4 w-4 rounded-full border-2 ${
+                      selectedFormationId === f.id
+                        ? "border-green-500 bg-green-500"
+                        : "border-gray-700"
                     }`}
-                  >
-                    <div
-                      className={`h-4 w-4 rounded border-2 ${
-                        squadIds.has(player.id)
-                          ? "border-green-500 bg-green-500"
-                          : "border-gray-700"
-                      }`}
-                    >
-                      {squadIds.has(player.id) && (
-                        <svg viewBox="0 0 10 10" className="text-white">
-                          <path
-                            d="M2 5l2.5 2.5L8 3"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            fill="none"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="flex-1 text-sm font-medium">{player.name}</span>
-                    {player.number !== undefined && (
-                      <span className="text-xs text-gray-500">#{player.number}</span>
-                    )}
-                    {player.keeperEligible && (
-                      <span className="rounded-full bg-blue-500/15 px-1.5 py-0.5 text-xs text-blue-300">
-                        GK
-                      </span>
-                    )}
-                  </button>
-                </li>
+                  />
+                  <span className="font-medium">{f.name}</span>
+                  <span className="ml-auto text-xs text-gray-500">
+                    {f.positions.length} positions
+                  </span>
+                </button>
               ))}
-            </ul>
+            </div>
           )}
         </section>
-      )}
 
-      {/* Step 3: Keepers */}
-      {formation && !shortHanded && keeperPool.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            3 · Keepers
-          </h2>
+        {/* Right column: Attendance + Keepers */}
+        <div className="flex flex-col gap-6">
+          {/* Step 2: Attendance */}
+          {formation && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                2 · Attendance
+              </h2>
 
-          {keeperPool.length === 0 && (
-            <p className="text-sm text-gray-400">
-              No keeper-eligible players in the squad. Mark players as GK-eligible in the{" "}
-              <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
-                roster
-              </Link>
-              .
-            </p>
+              <div className="flex items-center gap-2 text-sm">
+                <span
+                  className={`font-medium ${
+                    shortHanded
+                      ? "text-red-300"
+                      : "text-green-300"
+                  }`}
+                >
+                  {squad.length} present / {sideSize} needed
+                </span>
+              </div>
+
+              {shortHanded && (
+                <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                  Not enough players — need at least {sideSize} for this formation.
+                </p>
+              )}
+
+              {roster.length === 0 ? (
+                <p className="text-sm text-gray-400">
+                  Roster is empty.{" "}
+                  <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
+                    Add players first
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {roster.map((player) => (
+                    <li key={player.id}>
+                      <button
+                        type="button"
+                        onClick={() => togglePlayer(player.id)}
+                        className={`flex w-full items-center gap-3 rounded-xl border px-4 py-2.5 text-left ${
+                          squadIds.has(player.id)
+                            ? "border-green-500/30 bg-green-500/10"
+                            : "border-gray-800 bg-gray-900 opacity-50"
+                        }`}
+                      >
+                        <div
+                          className={`h-4 w-4 rounded border-2 ${
+                            squadIds.has(player.id)
+                              ? "border-green-500 bg-green-500"
+                              : "border-gray-700"
+                          }`}
+                        >
+                          {squadIds.has(player.id) && (
+                            <svg viewBox="0 0 10 10" className="text-white">
+                              <path
+                                d="M2 5l2.5 2.5L8 3"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                fill="none"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="flex-1 text-sm font-medium">{player.name}</span>
+                        {player.number !== undefined && (
+                          <span className="text-xs text-gray-500">#{player.number}</span>
+                        )}
+                        {player.keeperEligible && (
+                          <span className="rounded-full bg-blue-500/15 px-1.5 py-0.5 text-xs text-blue-300">
+                            GK
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
           )}
 
-          <KeeperPicker
-            label="Half 1 keeper"
-            pool={keeperPool}
-            value={keeper1Id}
-            suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
-            onChange={(id) => {
-              setKeeper1Id(id);
-              if ((prefs.keeperMode ?? "half-swap") === "fixed") setKeeper2Id(id);
-            }}
-          />
+          {/* Step 3: Keepers */}
+          {formation && !shortHanded && keeperPool.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                3 · Keepers
+              </h2>
 
-          {(prefs.keeperMode ?? "half-swap") === "half-swap" && (
-            <KeeperPicker
-              label="Half 2 keeper"
-              pool={keeperPool}
-              value={keeper2Id}
-              suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
-              onChange={setKeeper2Id}
-            />
-          )}
+              {keeperPool.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No keeper-eligible players in the squad. Mark players as GK-eligible in the{" "}
+                  <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
+                    roster
+                  </Link>
+                  .
+                </p>
+              )}
 
-          {(prefs.keeperMode ?? "half-swap") === "fixed" && keeper1Id && (
-            <p className="text-xs text-gray-500">
-              Fixed keeper mode — {keeperPool.find((p) => p.id === keeper1Id)?.name} plays both halves.
-            </p>
+              <KeeperPicker
+                label="Half 1 keeper"
+                pool={keeperPool}
+                value={keeper1Id}
+                suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
+                onChange={(id) => {
+                  setKeeper1Id(id);
+                  if ((prefs.keeperMode ?? "half-swap") === "fixed") setKeeper2Id(id);
+                }}
+              />
+
+              {(prefs.keeperMode ?? "half-swap") === "half-swap" && (
+                <KeeperPicker
+                  label="Half 2 keeper"
+                  pool={keeperPool}
+                  value={keeper2Id}
+                  suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
+                  onChange={setKeeper2Id}
+                />
+              )}
+
+              {(prefs.keeperMode ?? "half-swap") === "fixed" && keeper1Id && (
+                <p className="text-xs text-gray-500">
+                  Fixed keeper mode — {keeperPool.find((p) => p.id === keeper1Id)?.name} plays both halves.
+                </p>
+              )}
+            </section>
           )}
-        </section>
-      )}
+        </div>
+      </div>
 
       {/* Generate */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-950 p-4">
-        <div className="mx-auto max-w-md">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-950 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto max-w-md md:max-w-3xl lg:max-w-5xl">
           <button
             onClick={handleGenerate}
             disabled={!canGenerate || generating}
