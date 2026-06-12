@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeSeasonTotals, suggestNextKeepers } from "./season";
+import { computeSeasonTotals, suggestNextKeepers, halfSwapKeepersAreValid } from "./season";
 import type { RotationPlan } from "./types";
 import type { KeeperAssignment } from "./generatePlan";
 
@@ -117,5 +117,25 @@ describe("suggestNextKeepers", () => {
 
   it("returns an empty array when no prior assignments exist", () => {
     expect(suggestNextKeepers([])).toEqual([]);
+  });
+});
+
+// ── halfSwapKeepersAreValid ───────────────────────────────────────────────────
+
+describe("halfSwapKeepersAreValid", () => {
+  it("returns true when both halves have distinct keepers", () => {
+    expect(halfSwapKeepersAreValid("alice", "bob")).toBe(true);
+  });
+
+  it("returns false when the same player is assigned to both halves", () => {
+    expect(halfSwapKeepersAreValid("alice", "alice")).toBe(false);
+  });
+
+  it("returns false when the 1st-half keeper is missing", () => {
+    expect(halfSwapKeepersAreValid(null, "bob")).toBe(false);
+  });
+
+  it("returns false when the 2nd-half keeper is missing", () => {
+    expect(halfSwapKeepersAreValid("alice", null)).toBe(false);
   });
 });

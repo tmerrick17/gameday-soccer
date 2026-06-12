@@ -32,8 +32,8 @@ const basePrefs: Preferences = {
 
 function makeOracleSquad(): Player[] {
   return [
-    { id: "k1", name: "k1", keeperEligible: true },
-    { id: "k2", name: "k2", keeperEligible: true },
+    { id: "k1", name: "k1" },
+    { id: "k2", name: "k2" },
     { id: "d1", name: "d1", preferredRoles: ["Defender"] },
     { id: "d2", name: "d2", preferredRoles: ["Defender"] },
     { id: "d3", name: "d3", preferredRoles: ["Defender"] },

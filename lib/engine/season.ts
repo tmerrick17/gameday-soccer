@@ -20,6 +20,17 @@ export function computeSeasonTotals(plans: RotationPlan[]): SeasonTotals {
   return { perPlayer };
 }
 
+/**
+ * Returns true when a half-swap game has two distinct keepers assigned.
+ * The UI uses this to gate the Generate button.
+ */
+export function halfSwapKeepersAreValid(
+  keeper1Id: string | null,
+  keeper2Id: string | null
+): boolean {
+  return keeper1Id !== null && keeper2Id !== null && keeper1Id !== keeper2Id;
+}
+
 export function suggestNextKeepers(
   lastAssignments: KeeperAssignment[]
 ): KeeperAssignment[] {

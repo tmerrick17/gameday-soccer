@@ -67,7 +67,7 @@ describe("addPlayer", () => {
     expect(result.name).toBe("Alex");
   });
 
-  it("round-trips optional fields (number, preferredRoles, ability, keeperEligible)", async () => {
+  it("round-trips optional fields (number, preferredRoles, ability)", async () => {
     const { setDoc } = await import("firebase/firestore");
     const partial: Omit<Player, "id"> = {
       name: "Gabi",
@@ -75,7 +75,6 @@ describe("addPlayer", () => {
       preferredRoles: ["Forward", "Mid"],
       stretchRole: "Defender",
       ability: 8,
-      keeperEligible: true,
     };
     const result = await addPlayer(fakeDb, "team-1", partial);
 
@@ -83,7 +82,6 @@ describe("addPlayer", () => {
     expect(result.preferredRoles).toEqual(["Forward", "Mid"]);
     expect(result.stretchRole).toBe("Defender");
     expect(result.ability).toBe(8);
-    expect(result.keeperEligible).toBe(true);
 
     // Confirm the written document mirrors the Player
     const [, written] = vi.mocked(setDoc).mock.calls[0];

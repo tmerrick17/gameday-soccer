@@ -14,7 +14,7 @@ import {
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
-import { suggestNextKeepers } from "../../../../../lib/engine/season";
+import { suggestNextKeepers, halfSwapKeepersAreValid } from "../../../../../lib/engine/season";
 import type { Player, Formation, Preferences, Half } from "../../../../../lib/engine/types";
 import type { KeeperAssignment } from "../../../../../lib/engine/generatePlan";
 
@@ -79,14 +79,17 @@ export default function NewGamePage({ params }: PageProps) {
   const sideSize = formation?.positions.length ?? 0;
   const squad = roster.filter((p) => squadIds.has(p.id));
   const shortHanded = formation ? squad.length < sideSize : false;
-  const keeperPool = squad.filter((p) => p.keeperEligible);
+  const keeperPool = squad;
+  const keeperMode = prefs.keeperMode ?? "half-swap";
 
-  // If fixed keeper mode, mirror keeper 1 → keeper 2
+  // Mirror keeper1 → keeper2 in fixed mode; clear keeper2 if it duplicates keeper1 in half-swap mode
   useEffect(() => {
-    if ((prefs.keeperMode ?? "half-swap") === "fixed" && keeper1Id) {
+    if (keeperMode === "fixed" && keeper1Id) {
       setKeeper2Id(keeper1Id);
+    } else if (keeperMode === "half-swap" && keeper2Id === keeper1Id && keeper1Id !== null) {
+      setKeeper2Id(null);
     }
-  }, [prefs.keeperMode, keeper1Id]);
+  }, [keeperMode, keeper1Id, keeper2Id]);
 
   function togglePlayer(playerId: string) {
     setSquadIds((prev) => {
@@ -148,9 +151,10 @@ export default function NewGamePage({ params }: PageProps) {
 
   const canGenerate =
     !!formation &&
-    !!keeper1Id &&
-    !!keeper2Id &&
-    !shortHanded;
+    !shortHanded &&
+    (keeperMode === "fixed"
+      ? !!keeper1Id
+      : halfSwapKeepersAreValid(keeper1Id, keeper2Id));
 
   return (
     <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
@@ -281,11 +285,6 @@ export default function NewGamePage({ params }: PageProps) {
                         {player.number !== undefined && (
                           <span className="text-xs text-gray-500">#{player.number}</span>
                         )}
-                        {player.keeperEligible && (
-                          <span className="rounded-full bg-blue-500/15 px-1.5 py-0.5 text-xs text-blue-300">
-                            GK
-                          </span>
-                        )}
                       </button>
                     </li>
                   ))}
@@ -294,48 +293,51 @@ export default function NewGamePage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Step 3: Keepers */}
-          {formation && !shortHanded && keeperPool.length > 0 && (
+          {/* Step 3: Goalies */}
+          {formation && !shortHanded && (
             <section className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-                3 · Keepers
+                3 · Goalies
               </h2>
 
-              {keeperPool.length === 0 && (
-                <p className="text-sm text-gray-400">
-                  No keeper-eligible players in the squad. Mark players as GK-eligible in the{" "}
-                  <Link href={`/teams/${teamId}/roster`} className="text-green-400 underline">
-                    roster
-                  </Link>
-                  .
-                </p>
-              )}
-
-              <KeeperPicker
-                label="Half 1 keeper"
-                pool={keeperPool}
-                value={keeper1Id}
-                suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
-                onChange={(id) => {
-                  setKeeper1Id(id);
-                  if ((prefs.keeperMode ?? "half-swap") === "fixed") setKeeper2Id(id);
-                }}
-              />
-
-              {(prefs.keeperMode ?? "half-swap") === "half-swap" && (
-                <KeeperPicker
-                  label="Half 2 keeper"
-                  pool={keeperPool}
-                  value={keeper2Id}
-                  suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
-                  onChange={setKeeper2Id}
-                />
-              )}
-
-              {(prefs.keeperMode ?? "half-swap") === "fixed" && keeper1Id && (
-                <p className="text-xs text-gray-500">
-                  Fixed keeper mode — {keeperPool.find((p) => p.id === keeper1Id)?.name} plays both halves.
-                </p>
+              {keeperMode === "fixed" ? (
+                <>
+                  <KeeperPicker
+                    label="Plays both halves"
+                    pool={keeperPool}
+                    value={keeper1Id}
+                    suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
+                    onChange={(id) => {
+                      setKeeper1Id(id);
+                      setKeeper2Id(id);
+                    }}
+                  />
+                  {keeper1Id && (
+                    <p className="text-xs text-gray-500">
+                      Fixed keeper mode — {squad.find((p) => p.id === keeper1Id)?.name} plays both halves.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <KeeperPicker
+                    label="1st half"
+                    pool={keeperPool}
+                    value={keeper1Id}
+                    suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
+                    onChange={(id) => {
+                      setKeeper1Id(id);
+                      if (keeper2Id === id) setKeeper2Id(null);
+                    }}
+                  />
+                  <KeeperPicker
+                    label="2nd half"
+                    pool={keeperPool.filter((p) => p.id !== keeper1Id)}
+                    value={keeper2Id}
+                    suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
+                    onChange={setKeeper2Id}
+                  />
+                </>
               )}
             </section>
           )}
@@ -345,6 +347,9 @@ export default function NewGamePage({ params }: PageProps) {
       {/* Generate */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-800 bg-gray-950 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto max-w-md md:max-w-3xl lg:max-w-5xl">
+          {formation && !shortHanded && !canGenerate && !generating && (
+            <p className="mb-2 text-center text-xs text-gray-400">Pick goalies to continue</p>
+          )}
           <button
             onClick={handleGenerate}
             disabled={!canGenerate || generating}

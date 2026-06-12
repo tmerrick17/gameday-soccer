@@ -51,8 +51,6 @@ export interface Player {
   stretchRole?: Role;
   /** Per-Player rating used only by the Competitive Strategy. */
   ability?: number;
-  /** Membership in the Keeper pool (the "can-keep-goal" tag). */
-  keeperEligible?: boolean;
 }
 
 /** The full season-long list of Players on a Team. */

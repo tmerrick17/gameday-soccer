@@ -49,8 +49,8 @@ function makeGame(squad: Player[], overrides: Partial<Game> = {}): Game {
 // Oracle squad: 2 keepers + 3 defenders + 8 front-liners = 13 players
 function makeOracleSquad(): Player[] {
   return [
-    makePlayer("k1", { keeperEligible: true }),
-    makePlayer("k2", { keeperEligible: true }),
+    makePlayer("k1"),
+    makePlayer("k2"),
     makePlayer("d1", { preferredRoles: ["Defender"] }),
     makePlayer("d2", { preferredRoles: ["Defender"] }),
     makePlayer("d3", { preferredRoles: ["Defender"] }),
@@ -252,5 +252,21 @@ describe("generatePlan: oracle — 13-player 2-3-2+GK minute totals", () => {
     const plan = generatePlan(makeGame(squad), oracleKeepers);
     expect(plan.fairness).toBeDefined();
     expect(plan.fairness.perPlayer).toHaveLength(13);
+  });
+});
+
+describe("generatePlan: full-squad goalie pool", () => {
+  it("any squad player can serve as keeper — no special property required", () => {
+    // All players have no keeperEligible flag; any of them can be assigned via KeeperAssignment
+    const squad = makeOracleSquad();
+    // Use a previously-outfield player (f1) as keeper for half 0
+    const mixedKeepers: KeeperAssignment[] = [
+      { halfIndex: 0, keeperId: "f1" },
+      { halfIndex: 1, keeperId: "k2" },
+    ];
+    const plan = generatePlan(makeGame(squad), mixedKeepers);
+    for (const seg of plan.halves[0].segments) {
+      expect(seg.lineup.find((a) => a.positionId === "gk")?.playerId).toBe("f1");
+    }
   });
 });

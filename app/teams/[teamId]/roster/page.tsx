@@ -79,7 +79,6 @@ export default function RosterPage({ params }: PageProps) {
       preferredRoles: player.preferredRoles,
       stretchRole: player.stretchRole,
       ability: player.ability,
-      keeperEligible: player.keeperEligible,
     });
   }
 
@@ -341,7 +340,6 @@ export default function RosterPage({ params }: PageProps) {
                   <p className="truncate text-xs text-gray-500">
                     {(player.preferredRoles ?? []).join(", ") ||
                       "No preferred roles"}
-                    {player.keeperEligible ? " · GK eligible" : ""}
                   </p>
                 </div>
                 <button
@@ -555,21 +553,6 @@ function PlayerForm({
           }
           className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
-      </label>
-
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-        <input
-          type="checkbox"
-          checked={form.keeperEligible ?? false}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              keeperEligible: e.target.checked || undefined,
-            }))
-          }
-          className="h-4 w-4 rounded border-gray-300 accent-green-600 dark:border-gray-700"
-        />
-        Keeper eligible
       </label>
 
       <div className="flex gap-2">
