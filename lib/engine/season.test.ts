@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeSeasonTotals, suggestNextKeepers, halfSwapKeepersAreValid } from "./season";
+import { computeSeasonTotals, suggestNextKeepers, halfSwapKeepersAreValid, pastGoalieIds } from "./season";
 import type { RotationPlan } from "./types";
 import type { KeeperAssignment } from "./generatePlan";
 
@@ -117,6 +117,39 @@ describe("suggestNextKeepers", () => {
 
   it("returns an empty array when no prior assignments exist", () => {
     expect(suggestNextKeepers([])).toEqual([]);
+  });
+});
+
+// ── pastGoalieIds ─────────────────────────────────────────────────────────────
+
+describe("pastGoalieIds", () => {
+  it("returns [] for an empty games array", () => {
+    expect(pastGoalieIds([])).toEqual([]);
+  });
+
+  it("returns keeper IDs from a single game, half-0 before half-1", () => {
+    const games = [
+      { keeperAssignments: [{ halfIndex: 0 as const, keeperId: "alice" }, { halfIndex: 1 as const, keeperId: "bob" }] },
+    ];
+    expect(pastGoalieIds(games)).toEqual(["alice", "bob"]);
+  });
+
+  it("skips games that have no keeperAssignments", () => {
+    const games = [
+      {},
+      { keeperAssignments: [{ halfIndex: 0 as const, keeperId: "alice" }] },
+      { keeperAssignments: undefined },
+    ];
+    expect(pastGoalieIds(games)).toEqual(["alice"]);
+  });
+
+  it("orders by most-recent game first and deduplicates across games", () => {
+    const games = [
+      { keeperAssignments: [{ halfIndex: 0 as const, keeperId: "alice" }, { halfIndex: 1 as const, keeperId: "bob" }] },
+      { keeperAssignments: [{ halfIndex: 0 as const, keeperId: "charlie" }, { halfIndex: 1 as const, keeperId: "alice" }] },
+    ];
+    // most recent game (charlie, alice) first; alice already seen so deduplicated
+    expect(pastGoalieIds(games)).toEqual(["charlie", "alice", "bob"]);
   });
 });
 

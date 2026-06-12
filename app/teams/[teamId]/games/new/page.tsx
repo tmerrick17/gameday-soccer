@@ -14,7 +14,7 @@ import {
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
-import { suggestNextKeepers, halfSwapKeepersAreValid } from "../../../../../lib/engine/season";
+import { suggestNextKeepers, halfSwapKeepersAreValid, pastGoalieIds } from "../../../../../lib/engine/season";
 import type { Player, Formation, Preferences, Half } from "../../../../../lib/engine/types";
 import type { KeeperAssignment } from "../../../../../lib/engine/generatePlan";
 
@@ -43,6 +43,7 @@ export default function NewGamePage({ params }: PageProps) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestedKeepers, setSuggestedKeepers] = useState<KeeperAssignment[]>([]);
+  const [prevGoalieIds, setPrevGoalieIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -71,6 +72,7 @@ export default function NewGamePage({ params }: PageProps) {
           setKeeper1Id(suggested.find((ka) => ka.halfIndex === 0)?.keeperId ?? null);
           setKeeper2Id(suggested.find((ka) => ka.halfIndex === 1)?.keeperId ?? null);
         }
+        setPrevGoalieIds(pastGoalieIds(g));
       })
       .finally(() => setFetching(false));
   }, [user, teamId]);
@@ -307,6 +309,7 @@ export default function NewGamePage({ params }: PageProps) {
                     pool={keeperPool}
                     value={keeper1Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
+                    pastGoalieIds={prevGoalieIds}
                     onChange={(id) => {
                       setKeeper1Id(id);
                       setKeeper2Id(id);
@@ -325,6 +328,7 @@ export default function NewGamePage({ params }: PageProps) {
                     pool={keeperPool}
                     value={keeper1Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 0)?.keeperId ?? null}
+                    pastGoalieIds={prevGoalieIds}
                     onChange={(id) => {
                       setKeeper1Id(id);
                       if (keeper2Id === id) setKeeper2Id(null);
@@ -335,6 +339,7 @@ export default function NewGamePage({ params }: PageProps) {
                     pool={keeperPool.filter((p) => p.id !== keeper1Id)}
                     value={keeper2Id}
                     suggestedId={suggestedKeepers.find((ka) => ka.halfIndex === 1)?.keeperId ?? null}
+                    pastGoalieIds={prevGoalieIds}
                     onChange={setKeeper2Id}
                   />
                 </>
@@ -368,38 +373,54 @@ function KeeperPicker({
   pool,
   value,
   suggestedId,
+  pastGoalieIds,
   onChange,
 }: {
   label: string;
   pool: Player[];
   value: string | null;
   suggestedId?: string | null;
+  pastGoalieIds: string[];
   onChange: (id: string) => void;
 }) {
+  const pastGoalieSet = new Set(pastGoalieIds);
+  const previousGoaliesInPool = pastGoalieIds
+    .filter((id) => pool.some((p) => p.id === id))
+    .map((id) => pool.find((p) => p.id === id)!);
+  const otherPlayers = pool.filter((p) => !pastGoalieSet.has(p.id));
+
+  function optionLabel(p: Player) {
+    return suggestedId === p.id ? `${p.name} (suggested)` : p.name;
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <p className="text-xs font-medium text-gray-400">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {pool.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => onChange(p.id)}
-            className={`relative rounded-xl border px-3 py-2 text-sm font-medium ${
-              value === p.id
-                ? "border-green-500/40 bg-green-500/15 text-green-300"
-                : "border-gray-700 text-gray-200 hover:bg-gray-800"
-            }`}
-          >
-            {p.name}
-            {suggestedId === p.id && value !== p.id && (
-              <span className="ml-1.5 rounded-full bg-blue-500/15 px-1 py-0.5 text-xs font-normal text-blue-300">
-                suggested
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500"
+      >
+        <option value="" disabled>Choose…</option>
+        {previousGoaliesInPool.length > 0 && (
+          <optgroup label="Previous goalies">
+            {previousGoaliesInPool.map((p) => (
+              <option key={p.id} value={p.id}>
+                {optionLabel(p)}
+              </option>
+            ))}
+          </optgroup>
+        )}
+        {otherPlayers.length > 0 && (
+          <optgroup label="Other players">
+            {otherPlayers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {optionLabel(p)}
+              </option>
+            ))}
+          </optgroup>
+        )}
+      </select>
     </div>
   );
 }

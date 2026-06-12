@@ -31,6 +31,22 @@ export function halfSwapKeepersAreValid(
   return keeper1Id !== null && keeper2Id !== null && keeper1Id !== keeper2Id;
 }
 
+export function pastGoalieIds(
+  games: Array<{ keeperAssignments?: KeeperAssignment[] }>
+): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const game of [...games].reverse()) {
+    for (const ka of game.keeperAssignments ?? []) {
+      if (!seen.has(ka.keeperId)) {
+        seen.add(ka.keeperId);
+        result.push(ka.keeperId);
+      }
+    }
+  }
+  return result;
+}
+
 export function suggestNextKeepers(
   lastAssignments: KeeperAssignment[]
 ): KeeperAssignment[] {
