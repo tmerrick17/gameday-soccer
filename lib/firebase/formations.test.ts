@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { validateFormation, saveFormation, getFormations, deleteFormation } from "./formations";
+import { validateFormation, saveFormation, getFormations, deleteFormation, updateFormation } from "./formations";
 import type { Position } from "../engine/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -169,5 +169,24 @@ describe("deleteFormation", () => {
     expect(vi.mocked(deleteDoc)).toHaveBeenCalledOnce();
     const [ref] = vi.mocked(deleteDoc).mock.calls[0];
     expect((ref as DocRef).path).toBe("teams/team-1/formations/form-99");
+  });
+});
+
+// ── updateFormation ───────────────────────────────────────────────────────────
+
+describe("updateFormation", () => {
+  const EXISTING: import("../engine/types").Formation = { ...VALID_8V8, id: "form-42" };
+
+  it("calls setDoc with the correct path for the existing formation", async () => {
+    const { setDoc } = await import("firebase/firestore");
+    await updateFormation(fakeDb, "team-1", EXISTING);
+    expect(vi.mocked(setDoc)).toHaveBeenCalledOnce();
+    const [ref] = vi.mocked(setDoc).mock.calls[0];
+    expect((ref as DocRef).path).toBe("teams/team-1/formations/form-42");
+  });
+
+  it("returns the same formation object", async () => {
+    const result = await updateFormation(fakeDb, "team-1", EXISTING);
+    expect(result).toEqual(EXISTING);
   });
 });

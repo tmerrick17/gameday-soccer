@@ -8,6 +8,16 @@ import {
 } from "firebase/firestore";
 import type { Formation } from "../engine/types";
 
+export async function updateFormation(
+  db: Firestore,
+  teamId: string,
+  formation: Formation
+): Promise<Formation> {
+  const ref = doc(db, "teams", teamId, "formations", formation.id);
+  await setDoc(ref, formation);
+  return formation;
+}
+
 export function validateFormation(
   formation: Omit<Formation, "id">,
   sideSize: number

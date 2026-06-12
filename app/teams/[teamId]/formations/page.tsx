@@ -7,6 +7,7 @@ import { useAuth } from "../../../providers";
 import { getFirebase } from "../../../../lib/firebase/config";
 import {
   saveFormation,
+  updateFormation,
   getFormations,
   deleteFormation,
   validateFormation,
@@ -42,6 +43,7 @@ export default function FormationsPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/auth");
@@ -97,19 +99,45 @@ export default function FormationsPage({ params }: PageProps) {
     setTemplateName(null);
   }
 
+  function handleEdit(f: Formation) {
+    setPositions(f.positions);
+    setSideSize(f.positions.length);
+    setTemplateName(f.name);
+    setEditingId(f.id);
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setPositions([]);
+    setTemplateName(null);
+  }
+
   async function handleSave() {
     if (validationError) return;
     setSaving(true);
     setError(null);
     try {
       const { db } = getFirebase();
-      const formation = await saveFormation(db, teamId, {
-        name: templateName ?? generateFormationName(positions),
-        positions,
-      });
-      setFormations((prev) => [...prev, formation]);
-      setPositions([]);
-      setTemplateName(null);
+      if (editingId) {
+        const updated: Formation = {
+          id: editingId,
+          name: templateName ?? generateFormationName(positions),
+          positions,
+        };
+        await updateFormation(db, teamId, updated);
+        setFormations((prev) => prev.map((f) => (f.id === editingId ? updated : f)));
+        setEditingId(null);
+        setPositions([]);
+        setTemplateName(null);
+      } else {
+        const formation = await saveFormation(db, teamId, {
+          name: templateName ?? generateFormationName(positions),
+          positions,
+        });
+        setFormations((prev) => [...prev, formation]);
+        setPositions([]);
+        setTemplateName(null);
+      }
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {
@@ -165,12 +193,20 @@ export default function FormationsPage({ params }: PageProps) {
                   <p className="font-medium">{f.name}</p>
                   <p className="text-xs text-gray-500">{f.positions.length} positions</p>
                 </div>
-                <button
-                  onClick={() => handleDelete(f.id)}
-                  className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(f)}
+                    className="rounded-lg px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/10"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(f.id)}
+                    className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -181,7 +217,7 @@ export default function FormationsPage({ params }: PageProps) {
       <section className="flex flex-col gap-4 rounded-2xl border border-gray-800 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            New Formation
+            {editingId ? "Edit Formation" : "New Formation"}
           </h2>
           <button
             type="button"
@@ -301,12 +337,22 @@ export default function FormationsPage({ params }: PageProps) {
           </p>
         )}
 
+        {editingId && (
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="w-full rounded-xl border border-gray-700 px-4 py-3 text-sm font-semibold text-gray-300 hover:bg-gray-800"
+          >
+            Cancel
+          </button>
+        )}
+
         <button
           onClick={handleSave}
           disabled={saving || !!validationError || positions.length === 0}
           className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save formation"}
+          {saving ? "Saving…" : editingId ? "Save changes" : "Save formation"}
         </button>
       </section>
     </main>
