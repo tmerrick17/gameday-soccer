@@ -622,12 +622,20 @@ export default function GamePage({ params }: PageProps) {
 
       {/* Start game CTA (draft only) */}
       {status !== "completed" && (
-        <button
-          onClick={handleStartGame}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500"
-        >
-          ▶ Start live game
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleStartGame}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 py-3 text-sm font-semibold text-white hover:bg-green-500"
+          >
+            ▶ Start live game
+          </button>
+          <Link
+            href={`/teams/${teamId}/games/new?edit=${gameId}`}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-gray-700 py-3 text-sm font-semibold text-gray-300 hover:bg-gray-800"
+          >
+            ✎ Edit setup
+          </Link>
+        </div>
       )}
 
       {/* Half tabs */}

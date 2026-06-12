@@ -67,6 +67,15 @@ export async function listGames(
   });
 }
 
+export async function updateGameSetup(
+  db: Firestore,
+  teamId: string,
+  gameId: string,
+  input: Pick<GameSessionDoc, "formationId" | "squadIds" | "keeperAssignments" | "plan">
+): Promise<void> {
+  await updateDoc(doc(db, "teams", teamId, "games", gameId), input);
+}
+
 export async function updateGameLiveState(
   db: Firestore,
   teamId: string,

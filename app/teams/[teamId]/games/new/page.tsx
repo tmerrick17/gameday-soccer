@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../../providers";
 import { getFirebase } from "../../../../../lib/firebase/config";
@@ -11,6 +11,8 @@ import {
   getPreferences,
   listGames,
   saveGame,
+  updateGameSetup,
+  getGame,
   DEFAULT_PREFERENCES,
 } from "../../../../../lib/firebase";
 import { generatePlan } from "../../../../../lib/engine/generatePlan";
@@ -30,6 +32,8 @@ export default function NewGamePage({ params }: PageProps) {
   const { teamId } = use(params);
   const { user, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editGameId = searchParams.get("edit");
 
   const [roster, setRoster] = useState<Player[]>([]);
   const [formations, setFormations] = useState<Formation[]>([]);
@@ -52,30 +56,43 @@ export default function NewGamePage({ params }: PageProps) {
   useEffect(() => {
     if (!user) return;
     const { db } = getFirebase();
-    Promise.all([
+    const base = Promise.all([
       getRoster(db, teamId),
       getFormations(db, teamId),
       getPreferences(db, teamId),
       listGames(db, teamId),
-    ])
-      .then(([r, f, p, g]) => {
+    ]);
+    const editFetch = editGameId ? getGame(db, teamId, editGameId) : Promise.resolve(null);
+    Promise.all([base, editFetch])
+      .then(([[r, f, p, g], editGame]) => {
         setRoster(r);
         setFormations(f);
         setPrefs(p);
-        if (f.length === 1) setSelectedFormationId(f[0].id);
-        setSquadIds(new Set(r.map((pl) => pl.id)));
-        // Pre-suggest keepers from last game (swap halves for fairness)
-        const lastGame = [...g].reverse().find((game) => game.keeperAssignments?.length === 2);
-        if (lastGame) {
-          const suggested = suggestNextKeepers(lastGame.keeperAssignments);
-          setSuggestedKeepers(suggested);
-          setKeeper1Id(suggested.find((ka) => ka.halfIndex === 0)?.keeperId ?? null);
-          setKeeper2Id(suggested.find((ka) => ka.halfIndex === 1)?.keeperId ?? null);
-        }
         setPrevGoalieIds(pastGoalieIds(g));
+
+        if (editGame) {
+          // Edit mode: pre-fill from the existing game
+          setSelectedFormationId(editGame.formationId);
+          setSquadIds(new Set(editGame.squadIds));
+          const ka1 = editGame.keeperAssignments.find((ka) => ka.halfIndex === 0);
+          const ka2 = editGame.keeperAssignments.find((ka) => ka.halfIndex === 1);
+          setKeeper1Id(ka1?.keeperId ?? null);
+          setKeeper2Id(ka2?.keeperId ?? null);
+        } else {
+          // New game mode: default all players present, suggest keepers from last game
+          if (f.length === 1) setSelectedFormationId(f[0].id);
+          setSquadIds(new Set(r.map((pl) => pl.id)));
+          const lastGame = [...g].reverse().find((game) => game.keeperAssignments?.length === 2);
+          if (lastGame) {
+            const suggested = suggestNextKeepers(lastGame.keeperAssignments);
+            setSuggestedKeepers(suggested);
+            setKeeper1Id(suggested.find((ka) => ka.halfIndex === 0)?.keeperId ?? null);
+            setKeeper2Id(suggested.find((ka) => ka.halfIndex === 1)?.keeperId ?? null);
+          }
+        }
       })
       .finally(() => setFetching(false));
-  }, [user, teamId]);
+  }, [user, teamId, editGameId]);
 
   const formation = formations.find((f) => f.id === selectedFormationId) ?? null;
   const sideSize = formation?.positions.length ?? 0;
@@ -118,8 +135,9 @@ export default function NewGamePage({ params }: PageProps) {
         { halfIndex: 0, keeperId: keeper1Id },
         { halfIndex: 1, keeperId: keeper2Id },
       ];
+      const gameId = editGameId ?? `game-${Date.now()}`;
       const game = {
-        id: `game-${Date.now()}`,
+        id: gameId,
         formation,
         squad,
         preferences: prefs,
@@ -129,13 +147,19 @@ export default function NewGamePage({ params }: PageProps) {
         ] as [Half, Half],
       };
       const plan = generatePlan(game, keeperAssignments);
-      const saved = await saveGame(db, teamId, {
+      const setup = {
         formationId: formation.id,
         squadIds: squad.map((p) => p.id),
         keeperAssignments,
         plan,
-      });
-      router.push(`/teams/${teamId}/games/${saved.id}`);
+      };
+      if (editGameId) {
+        await updateGameSetup(db, teamId, editGameId, setup);
+        router.push(`/teams/${teamId}/games/${editGameId}`);
+      } else {
+        const saved = await saveGame(db, teamId, setup);
+        router.push(`/teams/${teamId}/games/${saved.id}`);
+      }
     } catch (e: unknown) {
       setError((e as Error).message);
     } finally {
@@ -161,10 +185,15 @@ export default function NewGamePage({ params }: PageProps) {
   return (
     <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
       <div className="flex items-center gap-3">
-        <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
+        <Link
+          href={editGameId ? `/teams/${teamId}/games/${editGameId}` : `/teams/${teamId}`}
+          className="text-gray-500 hover:text-white"
+        >
           ←
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">New Game</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {editGameId ? "Edit Game" : "New Game"}
+        </h1>
       </div>
 
       {error && (
@@ -360,7 +389,9 @@ export default function NewGamePage({ params }: PageProps) {
             disabled={!canGenerate || generating}
             className="w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-40"
           >
-            {generating ? "Generating…" : "Generate rotation plan"}
+            {generating
+              ? editGameId ? "Regenerating…" : "Generating…"
+              : editGameId ? "Regenerate rotation plan" : "Generate rotation plan"}
           </button>
         </div>
       </div>

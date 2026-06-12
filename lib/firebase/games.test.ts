@@ -141,6 +141,40 @@ describe("listGames", () => {
   });
 });
 
+// ── updateGameSetup ───────────────────────────────────────────────────────────
+
+describe("updateGameSetup", () => {
+  it("calls updateDoc with the correct game path", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    const { updateGameSetup } = await import("./games");
+    const newPlan: RotationPlan = { ...STUB_PLAN, gameId: "game-edited" };
+    await updateGameSetup(fakeDb, "team-1", "game-42", {
+      formationId: "form-2",
+      squadIds: ["p1", "p2"],
+      keeperAssignments: [{ halfIndex: 0 as const, keeperId: "k1" }, { halfIndex: 1 as const, keeperId: "k2" }],
+      plan: newPlan,
+    });
+    expect(vi.mocked(updateDoc)).toHaveBeenCalledOnce();
+    const [ref] = vi.mocked(updateDoc).mock.calls[0];
+    expect((ref as DocRef).path).toBe("teams/team-1/games/game-42");
+  });
+
+  it("passes formationId, squadIds, keeperAssignments, and plan to updateDoc", async () => {
+    const { updateDoc } = await import("firebase/firestore");
+    const { updateGameSetup } = await import("./games");
+    const newPlan: RotationPlan = { ...STUB_PLAN, gameId: "game-edited" };
+    const input = {
+      formationId: "form-2",
+      squadIds: ["p1", "p2"],
+      keeperAssignments: [{ halfIndex: 0 as const, keeperId: "k1" }, { halfIndex: 1 as const, keeperId: "k2" }],
+      plan: newPlan,
+    };
+    await updateGameSetup(fakeDb, "team-1", "game-42", input);
+    const [, written] = vi.mocked(updateDoc).mock.calls[0];
+    expect(written).toMatchObject(input);
+  });
+});
+
 // ── updateGameLiveState ───────────────────────────────────────────────────────
 
 describe("updateGameLiveState", () => {
