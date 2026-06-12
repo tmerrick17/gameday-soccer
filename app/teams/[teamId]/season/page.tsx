@@ -14,6 +14,10 @@ interface PageProps {
   params: Promise<{ teamId: string }>;
 }
 
+const SAFE =
+  "pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] " +
+  "pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))]";
+
 export default function SeasonPage({ params }: PageProps) {
   const { teamId } = use(params);
   const { user, loading } = useAuth();
@@ -50,7 +54,7 @@ export default function SeasonPage({ params }: PageProps) {
 
   if (error) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-6">
+      <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
         <p className="text-red-300">{error}</p>
       </main>
     );
@@ -104,7 +108,7 @@ export default function SeasonPage({ params }: PageProps) {
       : 0;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6">
+    <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
       <div className="flex items-center gap-3">
         <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
@@ -119,7 +123,8 @@ export default function SeasonPage({ params }: PageProps) {
       {totalGames === 0 ? (
         <p className="text-gray-400">No games recorded yet.</p>
       ) : (
-        <>
+        /* Responsive grid: minutes table on left, suggestion cards on right at md+ */
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
           {/* Minute totals table */}
           <section>
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-400">
@@ -162,55 +167,58 @@ export default function SeasonPage({ params }: PageProps) {
             </p>
           </section>
 
-          {/* Keeper suggestion section */}
-          {nextKeeperSuggestions && nextKeeperSuggestions.length === 2 && (
-            <section className="rounded-2xl border border-gray-700 p-4">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-                Keeper suggestion — next game
-              </h2>
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-xs text-gray-500">Half 1</p>
-                  <p className="font-semibold">
-                    {playerName(nextKeeperSuggestions[0].keeperId)}
-                  </p>
+          {/* Suggestion cards stacked in the right column on md+ */}
+          <div className="flex flex-col gap-6">
+            {/* Keeper suggestion section */}
+            {nextKeeperSuggestions && nextKeeperSuggestions.length === 2 && (
+              <section className="rounded-2xl border border-gray-700 p-4">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+                  Keeper suggestion — next game
+                </h2>
+                <div className="flex gap-6">
+                  <div>
+                    <p className="text-xs text-gray-500">Half 1</p>
+                    <p className="font-semibold">
+                      {playerName(nextKeeperSuggestions[0].keeperId)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Half 2</p>
+                    <p className="font-semibold">
+                      {playerName(nextKeeperSuggestions[1].keeperId)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Half 2</p>
-                  <p className="font-semibold">
-                    {playerName(nextKeeperSuggestions[1].keeperId)}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Keepers swapped from last game to balance half-by-half duty.
-              </p>
-            </section>
-          )}
+                <p className="mt-2 text-xs text-gray-500">
+                  Keepers swapped from last game to balance half-by-half duty.
+                </p>
+              </section>
+            )}
 
-          {/* Starting suggestion */}
-          {sorted.length > 0 && (
-            <section className="rounded-2xl border border-gray-700 p-4">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-                Starting suggestion — fewest minutes
-              </h2>
-              <p className="mb-2 text-xs text-gray-400">
-                Players with the fewest season minutes — consider starting them or giving them extra time next game.
-              </p>
-              <ul className="flex flex-col gap-1">
-                {[...sorted]
-                  .sort(([, a], [, b]) => a - b)
-                  .slice(0, 5)
-                  .map(([id, mins]) => (
-                    <li key={id} className="flex items-center justify-between text-sm">
-                      <span>{playerName(id)}</span>
-                      <span className="tabular-nums text-blue-400">{mins} min</span>
-                    </li>
-                  ))}
-              </ul>
-            </section>
-          )}
-        </>
+            {/* Starting suggestion */}
+            {sorted.length > 0 && (
+              <section className="rounded-2xl border border-gray-700 p-4">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+                  Starting suggestion — fewest minutes
+                </h2>
+                <p className="mb-2 text-xs text-gray-400">
+                  Players with the fewest season minutes — consider starting them or giving them extra time next game.
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {[...sorted]
+                    .sort(([, a], [, b]) => a - b)
+                    .slice(0, 5)
+                    .map(([id, mins]) => (
+                      <li key={id} className="flex items-center justify-between text-sm">
+                        <span>{playerName(id)}</span>
+                        <span className="tabular-nums text-blue-400">{mins} min</span>
+                      </li>
+                    ))}
+                </ul>
+              </section>
+            )}
+          </div>
+        </div>
       )}
     </main>
   );
