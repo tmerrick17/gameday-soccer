@@ -25,6 +25,10 @@ interface PageProps {
 const ROLES: Role[] = ["Forward", "Mid", "Defender", "Keeper"];
 const SIDE_SIZES = [5, 6, 7, 8, 9, 10, 11];
 
+const SAFE =
+  "pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] " +
+  "pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))]";
+
 
 let nextPosKey = 1;
 function newPosId() {
@@ -165,7 +169,7 @@ export default function FormationsPage({ params }: PageProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-6">
+    <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 md:max-w-3xl lg:max-w-5xl ${SAFE}`}>
       <div className="flex items-center gap-3">
         <Link href={`/teams/${teamId}`} className="text-gray-500 hover:text-white">
           ←
@@ -177,44 +181,46 @@ export default function FormationsPage({ params }: PageProps) {
         <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
       )}
 
-      {/* Saved formations */}
-      {formations.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Saved
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {formations.map((f) => (
-              <li
-                key={f.id}
-                className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3"
-              >
-                <div>
-                  <p className="font-medium">{f.name}</p>
-                  <p className="text-xs text-gray-500">{f.positions.length} positions</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(f)}
-                    className="rounded-lg px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/10"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(f.id)}
-                    className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* Responsive grid: side-by-side on desktop, stacked on mobile/tablet */}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:items-start">
+        {/* Saved formations */}
+        {formations.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-400">
+              Saved
+            </h2>
+            <ul className="flex flex-col gap-2 md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-1">
+              {formations.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex items-center justify-between rounded-xl border border-gray-800 px-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium">{f.name}</p>
+                    <p className="text-xs text-gray-500">{f.positions.length} positions</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(f)}
+                      className="rounded-lg px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/10"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(f.id)}
+                      className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      {/* Formation builder */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-gray-800 p-4">
+        {/* Formation builder */}
+        <section className={`flex flex-col gap-4 rounded-2xl border border-gray-800 p-4${formations.length === 0 ? " lg:col-span-2" : ""}`}>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             {editingId ? "Edit Formation" : "New Formation"}
@@ -355,6 +361,7 @@ export default function FormationsPage({ params }: PageProps) {
           {saving ? "Saving…" : editingId ? "Save changes" : "Save formation"}
         </button>
       </section>
+      </div>
     </main>
   );
 }
