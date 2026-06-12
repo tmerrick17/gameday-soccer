@@ -182,7 +182,6 @@ export default function FormationsPage({ params }: PageProps) {
             value={sideSize}
             onChange={(e) => {
               setSideSize(parseInt(e.target.value, 10));
-              setPositions([]);
               setTemplateName(null);
             }}
             className="mt-1 block w-full rounded-xl border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-green-500"
